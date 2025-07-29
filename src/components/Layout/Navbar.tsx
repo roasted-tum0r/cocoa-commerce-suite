@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, ShoppingCart, Bell, User, Menu, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -82,14 +83,16 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
             </Button>
 
             {/* Cart */}
-            <Button variant="ghost" size="sm" className="relative">
-              <ShoppingCart className="h-5 w-5" />
-              <Badge
-                className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-cart text-cart-foreground"
-              >
-                2
-              </Badge>
-            </Button>
+            <Link to="/cart">
+              <Button variant="ghost" size="sm" className="relative">
+                <ShoppingCart className="h-5 w-5" />
+                <Badge
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-cart text-cart-foreground"
+                >
+                  2
+                </Badge>
+              </Button>
+            </Link>
 
             {/* Profile dropdown */}
             <DropdownMenu>

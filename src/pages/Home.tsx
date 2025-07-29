@@ -117,7 +117,7 @@ export const Home = () => {
           onClose={() => setIsSidebarOpen(false)} 
         />
 
-        <main className="flex-1 lg:ml-0">
+        <main className="flex-1">
           {/* Hero Section */}
           <section className="relative h-96 md:h-[500px] overflow-hidden">
             <div 
