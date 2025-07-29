@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationModal } from "@/components/Modals/NotificationModal";
 
 interface NavbarProps {
   onMenuClick: () => void;
@@ -19,6 +20,7 @@ interface NavbarProps {
 
 export const Navbar = ({ onMenuClick }: NavbarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -61,18 +63,25 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
           {/* Right side - Actions */}
           <div className="flex items-center gap-2">
             {/* Favorites */}
-            <Button variant="ghost" size="sm" className="relative hidden sm:flex">
-              <Heart className="h-5 w-5" />
-              <Badge
-                variant="destructive"
-                className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-              >
-                3
-              </Badge>
-            </Button>
+            <Link to="/wishlist">
+              <Button variant="ghost" size="sm" className="relative hidden sm:flex">
+                <Heart className="h-5 w-5" />
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  3
+                </Badge>
+              </Button>
+            </Link>
 
             {/* Notifications */}
-            <Button variant="ghost" size="sm" className="relative">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="relative"
+              onClick={() => setShowNotifications(true)}
+            >
               <Bell className="h-5 w-5" />
               <Badge
                 variant="destructive"
@@ -105,17 +114,21 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Account Settings
+                <DropdownMenuItem asChild>
+                  <Link to="/account" className="flex items-center">
+                    <User className="mr-2 h-4 w-4" />
+                    Account Settings
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <ShoppingCart className="mr-2 h-4 w-4" />
                   Order History
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Heart className="mr-2 h-4 w-4" />
-                  Favorites
+                <DropdownMenuItem asChild>
+                  <Link to="/wishlist" className="flex items-center">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Favorites
+                  </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive">
@@ -126,6 +139,12 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
           </div>
         </div>
       </div>
+      
+      {/* Notification Modal */}
+      <NotificationModal 
+        open={showNotifications} 
+        onOpenChange={setShowNotifications} 
+      />
     </nav>
   );
 };

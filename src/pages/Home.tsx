@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Navbar } from "@/components/Layout/Navbar";
 import { Sidebar } from "@/components/Layout/Sidebar";
+import { Footer } from "@/components/Layout/Footer";
 import { ProductCard } from "@/components/Product/ProductCard";
+import { SubscriptionModal } from "@/components/Modals/SubscriptionModal";
+import { CookieModal } from "@/components/Modals/CookieModal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { ArrowRight, TrendingUp, Star, Users } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
 import productHeadphones from "@/assets/product-headphones.jpg";
@@ -12,10 +16,10 @@ import productMug from "@/assets/product-mug.jpg";
 
 // Mock data
 const categories = [
-  { name: "Electronics", icon: "📱", count: 24 },
-  { name: "Fashion", icon: "👕", count: 18 },
-  { name: "Home & Garden", icon: "🏠", count: 12 },
-  { name: "Sports", icon: "⚽", count: 8 },
+  { name: "Fresh Fruits", icon: "🍎", count: 45 },
+  { name: "Organic Vegetables", icon: "🥕", count: 32 },
+  { name: "Dry Fruits & Nuts", icon: "🥜", count: 28 },
+  { name: "Dairy Products", icon: "🥛", count: 18 },
 ];
 
 const featuredProducts = [
@@ -92,6 +96,7 @@ const featuredProducts = [
 
 export const Home = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const handleAddToCart = (productId: string) => {
     console.log("Add to cart:", productId);
@@ -108,43 +113,49 @@ export const Home = () => {
       <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
       
       <div className="flex">
-        <div className="hidden lg:block lg:w-80">
-          <Sidebar isOpen={true} onClose={() => {}} />
-        </div>
-        
         <Sidebar 
           isOpen={isSidebarOpen} 
           onClose={() => setIsSidebarOpen(false)} 
         />
 
         <main className="flex-1">
-          {/* Hero Section */}
-          <section className="relative h-96 md:h-[500px] overflow-hidden">
-            <div 
-              className="absolute inset-0 bg-cover bg-center bg-gradient-hero"
-              style={{ backgroundImage: `url(${heroBanner})` }}
-            >
-              <div className="absolute inset-0 bg-black/20" />
-            </div>
-            <div className="relative h-full flex items-center">
-              <div className="container mx-auto px-4">
-                <div className="max-w-lg">
-                  <Badge className="mb-4 bg-primary text-primary-foreground">
-                    New Collection
-                  </Badge>
-                  <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-                    Premium Quality Products
-                  </h1>
-                  <p className="text-lg text-white/90 mb-6">
-                    Discover our curated collection of premium products with unmatched quality and style.
-                  </p>
-                  <Button size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground">
-                    Shop Now
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </div>
-              </div>
-            </div>
+          {/* Hero Carousel Section */}
+          <section className="relative">
+            <Carousel className="w-full">
+              <CarouselContent>
+                <CarouselItem>
+                  <div className="relative h-96 md:h-[500px] overflow-hidden">
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center bg-gradient-hero"
+                      style={{ backgroundImage: `url(${heroBanner})` }}
+                    >
+                      <div className="absolute inset-0 bg-black/20" />
+                    </div>
+                    <div className="relative h-full flex items-center">
+                      <div className="container mx-auto px-4">
+                        <div className="max-w-lg">
+                          <Badge className="mb-4 bg-primary text-primary-foreground">
+                            New Collection
+                          </Badge>
+                          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
+                            Premium Quality Products
+                          </h1>
+                          <p className="text-lg text-white/90 mb-6">
+                            Discover our curated collection of premium products with unmatched quality and style.
+                          </p>
+                          <Button size="lg" className="bg-primary hover:bg-primary-hover text-primary-foreground">
+                            Shop Now
+                            <ArrowRight className="ml-2 h-5 w-5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
           </section>
 
           {/* Stats Section */}
@@ -254,13 +265,22 @@ export const Home = () => {
               <p className="text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
                 Get exclusive access to new arrivals, special offers, and member-only discounts.
               </p>
-              <Button size="lg" variant="secondary">
+              <Button size="lg" variant="secondary" onClick={() => setShowSubscriptionModal(true)}>
                 Sign Up Today
               </Button>
             </div>
           </section>
         </main>
       </div>
+      
+      <Footer />
+      
+      {/* Modals */}
+      <SubscriptionModal 
+        open={showSubscriptionModal} 
+        onOpenChange={setShowSubscriptionModal} 
+      />
+      <CookieModal />
     </div>
   );
 };

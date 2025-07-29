@@ -7,53 +7,53 @@
 @layer base {
   :root {
     /* Base colors */
-    --background: 0 0% 100%;
-    --foreground: 25 25% 15%;
+    --background: 135 15% 96%;
+    --foreground: 120 25% 15%;
 
     /* Card colors */
-    --card: 0 0% 100%;
-    --card-foreground: 25 25% 15%;
+    --card: 135 20% 94%;
+    --card-foreground: 120 25% 15%;
 
     /* Popover colors */
-    --popover: 0 0% 100%;
-    --popover-foreground: 25 25% 15%;
+    --popover: 135 15% 96%;
+    --popover-foreground: 120 25% 15%;
 
-    /* Primary - Rich chocolate brown */
-    --primary: 25 65% 35%;
-    --primary-foreground: 0 0% 98%;
-    --primary-hover: 25 70% 30%;
+    /* Primary - Dark olive green */
+    --primary: 120 40% 25%;
+    --primary-foreground: 320 45% 85%;
+    --primary-hover: 120 45% 20%;
 
-    /* Secondary - Warm cream/beige */
-    --secondary: 40 30% 92%;
-    --secondary-foreground: 25 50% 25%;
+    /* Secondary - Pastel pink */
+    --secondary: 320 40% 85%;
+    --secondary-foreground: 120 25% 15%;
 
     /* Muted colors */
-    --muted: 40 15% 95%;
-    --muted-foreground: 25 15% 55%;
+    --muted: 135 15% 88%;
+    --muted-foreground: 120 15% 45%;
 
-    /* Accent - Deep coffee brown */
-    --accent: 25 45% 25%;
-    --accent-foreground: 0 0% 98%;
+    /* Accent - Soft pink */
+    --accent: 320 35% 80%;
+    --accent-foreground: 120 25% 20%;
 
     /* Destructive colors */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
     /* Border and input */
-    --border: 40 20% 88%;
-    --input: 40 20% 88%;
-    --ring: 25 65% 35%;
+    --border: 135 15% 85%;
+    --input: 135 15% 85%;
+    --ring: 120 40% 25%;
 
     /* Commerce specific colors */
-    --cart: 25 65% 35%;
-    --cart-foreground: 0 0% 98%;
-    --favorite: 345 83% 47%;
-    --rating: 45 93% 47%;
+    --cart: 120 50% 35%;
+    --cart-foreground: 320 45% 90%;
+    --favorite: 320 70% 70%;
+    --rating: 45 95% 55%;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
     --gradient-secondary: linear-gradient(180deg, hsl(var(--background)), hsl(var(--muted)));
-    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.1), hsl(var(--accent) / 0.05));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--accent) / 0.1));
     
     /* Shadows */
     --shadow-card: 0 4px 6px -1px hsl(var(--primary) / 0.1);

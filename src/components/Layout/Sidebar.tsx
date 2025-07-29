@@ -1,4 +1,5 @@
 import { X, Filter, Heart, Clock, Settings, HelpCircle, Star, DollarSign } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -13,11 +14,11 @@ interface SidebarProps {
 
 export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const categories = [
-    { name: "Electronics", count: 24 },
-    { name: "Clothing", count: 18 },
-    { name: "Home & Garden", count: 12 },
-    { name: "Sports", count: 8 },
-    { name: "Books", count: 15 },
+    { name: "Fresh Fruits", count: 45 },
+    { name: "Organic Vegetables", count: 32 },
+    { name: "Dry Fruits & Nuts", count: 28 },
+    { name: "Dairy Products", count: 18 },
+    { name: "Bakery Items", count: 15 },
   ];
 
   const priceRange = [0, 1000];
@@ -32,17 +33,17 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - always hidden, only opens via burger menu */}
       <div
-        className={`fixed left-0 top-0 z-50 h-full w-80 bg-background border-r transform transition-transform duration-300 ease-smooth ${
+        className={`fixed left-0 top-16 z-50 h-[calc(100vh-4rem)] w-80 bg-background border-r transform transition-transform duration-300 ease-smooth ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 lg:static lg:z-auto`}
+        }`}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="text-lg font-semibold">Menu</h2>
-            <Button variant="ghost" size="sm" onClick={onClose} className="lg:hidden">
+            <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
           </div>
@@ -53,18 +54,22 @@ export const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <div>
               <h3 className="font-medium mb-3">Quick Actions</h3>
               <div className="space-y-2">
-                <Button variant="ghost" className="w-full justify-start">
-                  <Heart className="mr-2 h-4 w-4" />
-                  Favorites
-                  <Badge variant="secondary" className="ml-auto">3</Badge>
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link to="/wishlist">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Favorites
+                    <Badge variant="secondary" className="ml-auto">3</Badge>
+                  </Link>
                 </Button>
                 <Button variant="ghost" className="w-full justify-start">
                   <Clock className="mr-2 h-4 w-4" />
                   Order History
                 </Button>
-                <Button variant="ghost" className="w-full justify-start">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                <Button variant="ghost" className="w-full justify-start" asChild>
+                  <Link to="/account">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
                 </Button>
                 <Button variant="ghost" className="w-full justify-start">
                   <HelpCircle className="mr-2 h-4 w-4" />
