@@ -9,6 +9,9 @@
     /* Base colors */
     --background: 135 15% 96%;
     --foreground: 120 25% 15%;
+    
+    /* Navbar colors */
+    --navbar-background: 320 45% 88%;
 
     /* Card colors */
     --card: 135 20% 94%;

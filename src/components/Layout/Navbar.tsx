@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Search, ShoppingCart, Bell, User, Menu, Heart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,9 +21,17 @@ interface NavbarProps {
 export const Navbar = ({ onMenuClick }: NavbarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 w-full border-b bg-navbar/95 backdrop-blur supports-[backdrop-filter]:bg-navbar/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Left side - Menu + Logo */}
@@ -31,7 +39,6 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden"
               onClick={onMenuClick}
             >
               <Menu className="h-5 w-5" />
@@ -41,7 +48,10 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
               <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
                 <span className="text-sm font-bold text-primary-foreground">CC</span>
               </div>
-              <span className="hidden sm:block text-xl font-bold text-primary">
+              <span className="hidden sm:block text-xl font-bold text-primary" style={{
+                textShadow: '0 0 2px gold, 0 0 4px gold',
+                WebkitTextStroke: '0.5px gold'
+              }}>
                 CocoaCommerce
               </span>
             </div>
@@ -49,7 +59,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
 
           {/* Center - Search bar */}
           <div className="flex-1 max-w-lg mx-4">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
                 placeholder="Search products..."
@@ -57,7 +67,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 w-full"
               />
-            </div>
+            </form>
           </div>
 
           {/* Right side - Actions */}
