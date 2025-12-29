@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/Layout/Navbar";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Footer } from "@/components/Layout/Footer";
@@ -8,102 +8,69 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw } from "lucide-react";
-import productBanana from "@/assets/product-headphones.jpg";
-import productApple from "@/assets/product-watch.jpg";
-import productNuts from "@/assets/product-mug.jpg";
+import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, ArrowLeft, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-// Mock product data
-const productData = {
-  "1": {
-    id: "1",
-    name: "Premium Organic Bananas",
-    price: 4.99,
-    originalPrice: 6.99,
-    rating: 4.8,
-    reviewCount: 124,
-    image: productBanana,
-    category: "Fruits",
-    description: "Fresh, organic bananas sourced directly from sustainable farms. Rich in potassium and perfect for a healthy snack or smoothie ingredient.",
-    features: [
-      "Certified organic",
-      "Rich in potassium and vitamins",
-      "Sustainably sourced",
-      "Perfect ripeness guaranteed"
-    ],
-    inStock: true,
-    stockCount: 25,
-  }
-};
-
-const relatedProducts = [
-  {
-    id: "2",
-    name: "Fresh Red Apples",
-    price: 7.99,
-    rating: 4.6,
-    reviewCount: 89,
-    image: productApple,
-    category: "Fruits",
-    isNew: false,
-    isFavorite: false,
-  },
-  {
-    id: "3",
-    name: "Premium Mixed Nuts",
-    price: 15.99,
-    originalPrice: 19.99,
-    rating: 4.9,
-    reviewCount: 56,
-    image: productNuts,
-    category: "Dry Fruits",
-    isNew: false,
-    isFavorite: false,
-  },
-];
-
-const reviews = [
-  {
-    id: 1,
-    user: "Sarah Johnson",
-    avatar: "/placeholder-avatar.jpg",
-    rating: 5,
-    date: "2 days ago",
-    comment: "Amazing quality! The bananas were perfectly ripe and lasted longer than expected. Will definitely order again."
-  },
-  {
-    id: 2,
-    user: "Mike Chen",
-    avatar: "/placeholder-avatar.jpg",
-    rating: 4,
-    date: "1 week ago",
-    comment: "Good quality bananas, though slightly more expensive than local stores. The organic certification is worth it."
-  },
-  {
-    id: 3,
-    user: "Emily Davis",
-    avatar: "/placeholder-avatar.jpg",
-    rating: 5,
-    date: "2 weeks ago",
-    comment: "Perfect for my morning smoothies! Fresh, sweet, and delivered quickly."
-  }
-];
+import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { addToCart } from "@/redux/thunks/cartthunk";
+import { appDispatch } from "@/redux/store";
 
 export const ProductDetail = () => {
-  const { id } = useParams();
+  const { name } = useParams();
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const { toast } = useToast();
+  const dispatch = useAppDispatch();
 
-  const product = productData[id as keyof typeof productData];
+  const { lastPath, latestProducts } = useAppSelector((state) => state.home);
+  const { user } = useAppSelector((state) => state.auth);
+  const { guestUserId } = useAppSelector((state) => state.cart);
+
+  // Find product by name (decode URI component first)
+  const decodedName = decodeURIComponent(name || "");
+  const product = latestProducts.items.find(p => p.name === decodedName);
+
+  // Fallback image logic
+  const [imageSrc, setImageSrc] = useState("");
+
+  useEffect(() => {
+    if (product) {
+      setImageSrc(product.image);
+    }
+  }, [product]);
+
+  const handleImageError = () => {
+    if (product) {
+      setImageSrc(`https://loremflickr.com/600/600/${encodeURIComponent(product.category?.name || "product")},${encodeURIComponent(product.name)}/all`);
+    }
+  };
 
   if (!product) {
-    return <div>Product not found</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+        <h2 className="text-2xl font-bold">Product not found</h2>
+        <Button onClick={() => navigate("/")}>Go Home</Button>
+      </div>
+    );
   }
 
+  const handleBack = () => {
+    if (lastPath) {
+      navigate(lastPath);
+    } else {
+      navigate("/");
+    }
+  };
+
   const handleAddToCart = () => {
+    appDispatch(
+      addToCart({
+        itemId: product.id,
+        isGuestCart: !user,
+        userId: !user?.id ? guestUserId : user?.id,
+      })
+    );
     toast({
       title: "Added to cart",
       description: `${quantity} x ${product.name} added to your cart`,
@@ -111,10 +78,8 @@ export const ProductDetail = () => {
   };
 
   const handleBuyNow = () => {
-    toast({
-      title: "Redirecting to checkout",
-      description: "Taking you to the checkout page...",
-    });
+    handleAddToCart();
+    navigate("/cart");
   };
 
   const handleToggleFavorite = () => {
@@ -129,7 +94,7 @@ export const ProductDetail = () => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`h-4 w-4 ${i < Math.floor(rating) ? 'fill-rating text-rating' : 'text-muted-foreground'}`}
+        className={`h-4 w-4 ${i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
       />
     ));
   };
@@ -137,189 +102,182 @@ export const ProductDetail = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
-      
+
       <div className="flex flex-1">
-        <Sidebar 
-          isOpen={isSidebarOpen} 
-          onClose={() => setIsSidebarOpen(false)} 
+        <Sidebar
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
 
         <main className="flex-1">
           <div className="container mx-auto px-4 py-8">
+            {/* Back Button */}
+            <Button
+              variant="ghost"
+              className="mb-6 gap-2 hover:bg-transparent hover:text-primary pl-0"
+              onClick={handleBack}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to {lastPath === "/" ? "Home" : "Products"}
+            </Button>
+
             {/* Product Details */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
               {/* Product Image */}
               <div className="space-y-4">
-                <div className="aspect-square rounded-lg overflow-hidden bg-muted">
-                  <img 
-                    src={product.image} 
+                <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-lg relative group">
+                  <img
+                    src={imageSrc}
                     alt={product.name}
-                    className="w-full h-full object-cover"
+                    onError={handleImageError}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
+                  <div className="absolute top-4 right-4 z-10">
+                    <Button variant="secondary" size="icon" className="rounded-full shadow-md" onClick={() => {
+                      navigator.clipboard.writeText(window.location.href);
+                      toast({ title: "Link copied", description: "Product link copied to clipboard" });
+                    }}>
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
               {/* Product Info */}
-              <div className="space-y-6">
+              <div className="space-y-8">
                 <div>
-                  <Badge className="mb-2">{product.category}</Badge>
-                  <h1 className="text-3xl font-bold">{product.name}</h1>
-                  <div className="flex items-center gap-2 mt-2">
-                    <div className="flex">{renderStars(product.rating)}</div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Badge variant="secondary" className="px-3 py-1 text-sm">{product.category?.name || "Category"}</Badge>
+                    {product.createdAt && <Badge className="bg-green-500 hover:bg-green-600">New Arrival</Badge>}
+                  </div>
+                  <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                    {product.name}
+                  </h1>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-full">
+                      <div className="flex">{renderStars(product.rating)}</div>
+                      <span className="text-sm font-medium ml-1">{product.rating}</span>
+                    </div>
                     <span className="text-sm text-muted-foreground">
-                      {product.rating} ({product.reviewCount} reviews)
+                      ({product.reviews.length} verified reviews)
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl font-bold text-primary">${product.price}</span>
-                  {product.originalPrice && (
-                    <span className="text-lg text-muted-foreground line-through">
-                      ${product.originalPrice}
-                    </span>
-                  )}
-                  {product.originalPrice && (
-                    <Badge variant="destructive">
-                      {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
-                    </Badge>
+                <div className="flex items-end gap-4 border-b pb-8">
+                  <span className="text-5xl font-bold text-primary">${product.price.toFixed(2)}</span>
+                  {product.price && (
+                    <div className="flex flex-col mb-1">
+                      <span className="text-lg text-muted-foreground line-through decoration-2">
+                        ${(product.price * 1.2).toFixed(2)}
+                      </span>
+                      <span className="text-sm font-bold text-red-500">
+                        Save 20%
+                      </span>
+                    </div>
                   )}
                 </div>
 
-                <p className="text-muted-foreground">{product.description}</p>
+                <p className="text-lg text-muted-foreground leading-relaxed">
+                  {product.description || "Experience premium quality with this exceptional product. Designed for durability and style, it's the perfect addition to your collection."}
+                </p>
 
-                <div>
-                  <h3 className="font-semibold mb-2">Features:</h3>
-                  <ul className="space-y-1">
-                    {product.features.map((feature, index) => (
-                      <li key={index} className="text-sm text-muted-foreground flex items-center">
-                        <span className="w-1.5 h-1.5 bg-primary rounded-full mr-2"></span>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center border rounded-lg">
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
+                <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                  <div className="flex items-center border-2 rounded-xl bg-background">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-12 w-12 rounded-l-xl hover:bg-muted"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     >
                       -
                     </Button>
-                    <span className="px-4 py-2 min-w-[3rem] text-center">{quantity}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
+                    <span className="w-12 text-center font-semibold text-lg">{quantity}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-12 w-12 rounded-r-xl hover:bg-muted"
                       onClick={() => setQuantity(quantity + 1)}
                     >
                       +
                     </Button>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {product.stockCount} items available
-                  </span>
-                </div>
 
-                <div className="flex gap-3">
-                  <Button 
-                    className="flex-1 bg-primary hover:bg-primary-hover text-primary-foreground"
+                  <Button
+                    className="flex-1 h-12 text-lg font-semibold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all"
                     onClick={handleAddToCart}
                   >
-                    <ShoppingCart className="mr-2 h-4 w-4" />
+                    <ShoppingCart className="mr-2 h-5 w-5" />
                     Add to Cart
                   </Button>
-                  <Button 
-                    className="flex-1 bg-primary hover:bg-primary-hover text-primary-foreground"
+
+                  <Button
+                    variant="secondary"
+                    className="flex-1 h-12 text-lg font-semibold rounded-xl"
                     onClick={handleBuyNow}
                   >
                     Buy Now
                   </Button>
-                  <Button 
-                    variant="outline" 
+
+                  <Button
+                    variant="outline"
                     size="icon"
+                    className="h-12 w-12 rounded-xl border-2"
                     onClick={handleToggleFavorite}
                   >
-                    <Heart className={`h-4 w-4 ${isFavorite ? 'fill-favorite text-favorite' : ''}`} />
+                    <Heart className={`h-5 w-5 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                   </Button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-                  <div className="text-center">
-                    <Truck className="h-6 w-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Free Delivery</p>
-                    <p className="text-xs text-muted-foreground">Orders over $50</p>
+                <div className="grid grid-cols-3 gap-4 pt-8">
+                  <div className="flex flex-col items-center text-center p-4 bg-muted/30 rounded-xl">
+                    <Truck className="h-8 w-8 mb-3 text-primary" />
+                    <p className="font-semibold">Free Delivery</p>
+                    <p className="text-xs text-muted-foreground mt-1">On orders over $50</p>
                   </div>
-                  <div className="text-center">
-                    <Shield className="h-6 w-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Quality Guarantee</p>
-                    <p className="text-xs text-muted-foreground">100% fresh</p>
+                  <div className="flex flex-col items-center text-center p-4 bg-muted/30 rounded-xl">
+                    <Shield className="h-8 w-8 mb-3 text-primary" />
+                    <p className="font-semibold">2 Year Warranty</p>
+                    <p className="text-xs text-muted-foreground mt-1">Full coverage</p>
                   </div>
-                  <div className="text-center">
-                    <RotateCcw className="h-6 w-6 mx-auto mb-2 text-primary" />
-                    <p className="text-sm font-medium">Easy Returns</p>
-                    <p className="text-xs text-muted-foreground">30-day policy</p>
+                  <div className="flex flex-col items-center text-center p-4 bg-muted/30 rounded-xl">
+                    <RotateCcw className="h-8 w-8 mb-3 text-primary" />
+                    <p className="font-semibold">30 Days Return</p>
+                    <p className="text-xs text-muted-foreground mt-1">No questions asked</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Reviews Section */}
-            <Card className="mb-12">
-              <CardHeader>
-                <CardTitle>Customer Reviews</CardTitle>
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="flex">{renderStars(product.rating)}</div>
-                    <span className="font-semibold">{product.rating}</span>
-                    <span className="text-muted-foreground">({product.reviewCount} reviews)</span>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b pb-4 last:border-b-0">
-                      <div className="flex items-start gap-4">
+            <div className="mt-16">
+              <h2 className="text-3xl font-bold mb-8">Customer Reviews</h2>
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {product.reviews.map((review, index) => (
+                  <Card key={index} className="bg-muted/20 border-none shadow-sm">
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4 mb-4">
                         <Avatar>
-                          <AvatarImage src={review.avatar} alt={review.user} />
-                          <AvatarFallback>{review.user.charAt(0)}</AvatarFallback>
+                          <AvatarFallback>{review.user?.name?.charAt(0) || "U"}</AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h4 className="font-medium">{review.user}</h4>
-                            <div className="flex">{renderStars(review.rating)}</div>
-                            <span className="text-sm text-muted-foreground">{review.date}</span>
-                          </div>
-                          <p className="text-muted-foreground">{review.comment}</p>
+                        <div>
+                          <h4 className="font-semibold">{review.user?.name || "Anonymous"}</h4>
+                          <div className="flex mt-1">{renderStars(review.rating)}</div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Related Products */}
-            <div>
-              <h2 className="text-2xl font-bold mb-6">You may also like</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {relatedProducts.map((relatedProduct) => (
-                  <ProductCard
-                    key={relatedProduct.id}
-                    product={relatedProduct}
-                    onAddToCart={() => console.log("Add to cart:", relatedProduct.id)}
-                    onToggleFavorite={() => console.log("Toggle favorite:", relatedProduct.id)}
-                  />
+                      <p className="text-muted-foreground">{review.comment}</p>
+                    </CardContent>
+                  </Card>
                 ))}
+                {product.reviews.length === 0 && (
+                  <p className="text-muted-foreground col-span-full text-center py-8">No reviews yet. Be the first to review!</p>
+                )}
               </div>
             </div>
           </div>
         </main>
       </div>
-      
+
       <Footer />
     </div>
   );
