@@ -76,4 +76,8 @@ export const API_ENDPOINTS = {
     LOGIN: "auth/login-with-password",
     VERIFY_OTP: "auth/verify-otp",
   },
+  NEWSLETTER: {
+    SUBSCRIBE: "newsletter-subs",
+    UNSUBSCRIBE: (email: string) => `newsletter-subs/unsubscribe?email=${encodeURIComponent(email)}`,
+  },
 };
