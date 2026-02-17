@@ -7,7 +7,7 @@ import { store, persistor } from './redux/store.ts';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import { ThemeProvider } from "./components/theme-provider"
-import { Analytics } from '@vercel/analytics/next';
+import { Analytics } from '@vercel/analytics/react';
 
 createRoot(document.getElementById("root")!).render(<React.StrictMode>
     <Provider store={store}>
