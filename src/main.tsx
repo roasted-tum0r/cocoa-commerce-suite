@@ -7,12 +7,15 @@ import { store, persistor } from './redux/store.ts';
 import { PersistGate } from 'redux-persist/integration/react';
 
 import { ThemeProvider } from "./components/theme-provider"
+import { Analytics } from '@vercel/analytics/next';
 
 createRoot(document.getElementById("root")!).render(<React.StrictMode>
     <Provider store={store}>
         <PersistGate loading={null} persistor={persistor}>
             <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
                 <App />
+                <Analytics />
+
             </ThemeProvider>
         </PersistGate>
     </Provider>

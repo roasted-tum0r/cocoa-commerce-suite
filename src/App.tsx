@@ -23,7 +23,6 @@ import { NewArrivalsPage } from "./pages/NewArrivalsPage";
 import { ContactPage } from "./pages/ContactPage";
 
 import { AllProductsPage } from "./pages/AllProductsPage";
-import { Analytics } from "@vercel/analytics/next"
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -53,7 +52,6 @@ const App = () => (
         </BrowserRouter>
       </AuthModalProvider>
     </TooltipProvider>
-    <Analytics />
   </QueryClientProvider>
 );
 
