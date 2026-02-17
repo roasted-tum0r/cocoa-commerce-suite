@@ -8,7 +8,7 @@ export const ContactPage = () => {
     return (
         <div className="container mx-auto px-4 py-10 animate-in fade-in duration-500">
             <div className="text-center mb-12">
-                <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">Contact Us</h1>
+                <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Contact Us</h1>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                     Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
                 </p>
@@ -23,8 +23,8 @@ export const ContactPage = () => {
                         </div>
                         <div>
                             <h3 className="font-semibold text-lg mb-1">Email Us</h3>
-                            <p className="text-muted-foreground">support@cocoacommerce.com</p>
-                            <p className="text-muted-foreground">sales@cocoacommerce.com</p>
+                            <p className="text-muted-foreground">concierge@anandinisexotica.com</p>
+                            <p className="text-muted-foreground">sales@anandinisexotica.com</p>
                         </div>
                     </div>
 
@@ -45,8 +45,8 @@ export const ContactPage = () => {
                         </div>
                         <div>
                             <h3 className="font-semibold text-lg mb-1">Visit Us</h3>
-                            <p className="text-muted-foreground">123 Chocolate Lane</p>
-                            <p className="text-muted-foreground">Sweet City, SC 12345</p>
+                            <p className="text-muted-foreground">Luxury Orchard Lane</p>
+                            <p className="text-muted-foreground">West Bay, Exotica</p>
                         </div>
                     </div>
                 </div>

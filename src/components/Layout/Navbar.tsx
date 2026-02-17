@@ -128,22 +128,22 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
               <Sheet>
                 <SheetTrigger asChild>
                   <div className="flex items-center gap-2 cursor-pointer">
-                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg">
-                      <span className="text-sm font-bold text-white">CC</span>
+                    <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                      <span className="text-sm font-bold text-white">AE</span>
                     </div>
-                    <span className="hidden sm:block text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
-                      CocoaCommerce
+                    <span className="hidden sm:block text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                      Anandini's Exotica
                     </span>
                   </div>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[300px] sm:w-[400px]">
                   <div className="flex flex-col gap-6 py-6">
                     <div className="flex items-center gap-2" onClick={() => navigate("/")}>
-                      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg">
-                        <span className="text-sm font-bold text-white">CC</span>
+                      <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
+                        <span className="text-sm font-bold text-white">AE</span>
                       </div>
-                      <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
-                        CocoaCommerce
+                      <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                        Anandini's Exotica
                       </span>
                     </div>
                     <nav className="flex flex-col gap-4">
@@ -173,13 +173,13 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
               className="hidden md:flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate("/")}
             >
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center shadow-lg">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                 <span className="text-sm font-bold text-white">
-                  CC
+                  AE
                 </span>
               </div>
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
-                CocoaCommerce
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                Anandini's Exotica
               </span>
             </div>
           </div>
@@ -403,7 +403,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
               </Button>
             </Link>
 
-            {/* Theme Toggle */}
+            {/* Theme Toggle
             <Button
               variant="ghost"
               size="icon"
@@ -413,7 +413,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
               <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" style={{ stroke: "url(#icon-gradient)" }} />
               <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" style={{ stroke: "url(#icon-gradient)" }} />
               <span className="sr-only">Toggle theme</span>
-            </Button>
+            </Button> */}
 
             {/* Profile / Login */}
             {user ? (

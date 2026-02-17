@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, ArrowLeft, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
+import { ModernImage } from "@/components/ui/ModernImage";
 import { addToCart } from "@/redux/thunks/cartthunk";
 import { appDispatch } from "@/redux/store";
 
@@ -30,21 +31,6 @@ export const ProductDetail = () => {
   // Find product by name (decode URI component first)
   const decodedName = decodeURIComponent(name || "");
   const product = latestProducts.items.find(p => p.name === decodedName);
-
-  // Fallback image logic
-  const [imageSrc, setImageSrc] = useState("");
-
-  useEffect(() => {
-    if (product) {
-      setImageSrc(product.image);
-    }
-  }, [product]);
-
-  const handleImageError = () => {
-    if (product) {
-      setImageSrc(`https://loremflickr.com/600/600/${encodeURIComponent(product.category?.name || "product")},${encodeURIComponent(product.name)}/all`);
-    }
-  };
 
   if (!product) {
     return (
@@ -126,11 +112,11 @@ export const ProductDetail = () => {
               {/* Product Image */}
               <div className="space-y-4">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-lg relative group">
-                  <img
-                    src={imageSrc}
+                  <ModernImage
+                    src={product.image}
                     alt={product.name}
-                    onError={handleImageError}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="group-hover:scale-105"
+                    containerClassName="w-full h-full"
                   />
                   <div className="absolute top-4 right-4 z-10">
                     <Button variant="secondary" size="icon" className="rounded-full shadow-md" onClick={() => {

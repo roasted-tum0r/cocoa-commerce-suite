@@ -10,17 +10,18 @@ export const Footer = () => {
           <div>
             <div className="flex items-center gap-2 mb-4">
               <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-                <span className="text-sm font-bold text-primary-foreground">CC</span>
+                <span className="text-sm font-bold text-primary-foreground italic">AE</span>
               </div>
-              <span className="text-xl font-bold">CocoaCommerce</span>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                Anandini's Exotica
+              </span>
             </div>
-            <p className="text-primary-foreground/80 mb-4">
-              Your premium destination for quality fruits, food, and dry fruits. 
-              Fresh, organic, and delivered to your doorstep.
+            <p className="text-primary-foreground/80 mb-4 leading-relaxed">
+              Exotic fruits from the West, premium Dubai dates, and royal harvests. Handpicked for the connoisseur.
             </p>
             <div className="flex items-center gap-2 text-sm text-primary-foreground/70">
               <MapPin className="h-4 w-4" />
-              <span>123 Fresh Market St, Food City</span>
+              <span>Luxury Orchard Lane, West Bay</span>
             </div>
           </div>
 
@@ -56,7 +57,7 @@ export const Footer = () => {
               </div>
               <div className="flex items-center gap-2 text-sm text-primary-foreground/80">
                 <Mail className="h-4 w-4" />
-                <span>hello@cocoacommerce.com</span>
+                <span>concierge@anandinisexotica.com</span>
               </div>
             </div>
             <div className="flex gap-3">
@@ -77,7 +78,7 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-primary-foreground/70">
-          <p>&copy; 2024 CocoaCommerce. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Anandini's Exotica. All rights reserved.</p>
         </div>
       </div>
     </footer>

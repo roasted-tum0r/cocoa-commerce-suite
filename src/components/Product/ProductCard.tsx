@@ -7,6 +7,7 @@ import { ProductCardProps } from "@/redux/types";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { useNavigate, useLocation } from "react-router-dom";
 import { setLastPath } from "@/redux/reducers/homereducer";
+import { ModernImage } from "@/components/ui/ModernImage";
 
 export const ProductCard = ({
   product,
@@ -22,17 +23,8 @@ export const ProductCard = ({
     : 0;
 
   const { cartInfo } = useAppSelector((state) => state.cart);
-
-  // ✅ Find the item in the cart
   const cartItem = cartInfo?.find((item) => item.itemId === product.id);
   const quantity = cartItem?.quantity ?? 0;
-
-  const [imageSrc, setImageSrc] = useState(product.image);
-
-  const handleImageError = () => {
-    // Fallback to a generated image based on product name if original fails
-    setImageSrc(`https://loremflickr.com/400/400/${encodeURIComponent(product.category?.name || "product")},${encodeURIComponent(product.name)}/all`);
-  };
 
   const handleCardClick = () => {
     dispatch(setLastPath(location.pathname));
@@ -47,11 +39,11 @@ export const ProductCard = ({
       <CardContent className="p-0">
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-muted">
-          <img
-            src={imageSrc}
+          <ModernImage
+            src={product.image}
             alt={product.name}
-            onError={handleImageError}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+            className="group-hover:scale-110"
+            containerClassName="h-full w-full"
           />
 
           {/* Badges */}
