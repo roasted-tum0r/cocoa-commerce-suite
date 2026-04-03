@@ -70,6 +70,9 @@ export const API_ENDPOINTS = {
 
       return `cart/cart-info${query.toString() ? `?${query.toString()}` : ""}`;
     },
+    DELETE_ITEMS: (cartId: string) => `cart/delete-all?cartId=${cartId}`,
+    UPDATE_ITEM_QUANTITY: (params: { itemId: string; userId: string; isGuestCart: boolean }) => 
+      `cart-items/update?itemId=${params.itemId}&userId=${params.userId}&isGuestCart=${params.isGuestCart}`,
   },
   AUTH: {
     REGISTER: "auth/register-new-user",

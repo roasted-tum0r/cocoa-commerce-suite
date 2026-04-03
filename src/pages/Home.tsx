@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Navbar } from "@/components/Layout/Navbar";
-import { Sidebar } from "@/components/Layout/Sidebar";
 import { Footer } from "@/components/Layout/Footer";
-import { ProductCard } from "@/components/Product/ProductCard";
 import { SubscriptionModal } from "@/components/Modals/SubscriptionModal";
 import { CookieModal } from "@/components/Modals/CookieModal";
 import { Button } from "@/components/ui/button";
@@ -11,14 +9,9 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ArrowRight, TrendingUp, Star, Users } from "lucide-react";
 import heroBanner from "@/assets/hero-banner.jpg";
-import productHeadphones from "@/assets/product-headphones.jpg";
-import productWatch from "@/assets/product-watch.jpg";
-import productMug from "@/assets/product-mug.jpg";
 import { CategoryList } from "@/components/Sections/CategoryList";
 import ProductsList from "@/components/Sections/ProductList";
 import { ViewAllButton } from "@/components/ui/VewAllButton";
@@ -45,7 +38,7 @@ export const Home = () => {
       })
     );
   };
-
+  
   const handleToggleFavorite = (productId: string) => {
     console.log("Toggle favorite:", productId);
     // Toggle favorite logic here

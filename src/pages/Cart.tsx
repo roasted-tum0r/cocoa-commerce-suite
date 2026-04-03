@@ -1,19 +1,117 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Layout/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft, ArrowRight, Package } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Plus, Minus, Trash2, ShoppingBag, ArrowLeft, ArrowRight, Package, MapPin, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import productHeadphones from "@/assets/product-headphones.jpg"; // Fallback image
 import { appDispatch } from "@/redux/store";
-import { fetchCart } from "@/redux/thunks/cartthunk";
+import { fetchCart, deleteCartItems, updateCartItemQuantity } from "@/redux/thunks/cartthunk";
 import { useAppSelector } from "@/redux/hooks";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useAuthModal } from "@/context/AuthModalContext";
+import { AddressModal } from "@/components/Modals/AddressModal";
+
+const CartItemQuantity = ({ cartItem, userId, isGuestCart }: any) => {
+  const [tempQ, setTempQ] = useState(cartItem.quantity.toString());
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    setTempQ(cartItem.quantity.toString());
+  }, [cartItem.quantity]);
+
+  const commitChange = async (newQuantity: number) => {
+    if (newQuantity === cartItem.quantity || newQuantity < 1) return;
+    setIsUpdating(true);
+    await appDispatch(updateCartItemQuantity({
+      itemId: cartItem.item.id,
+      userId,
+      isGuestCart,
+      quantity: newQuantity
+    }));
+    appDispatch(fetchCart({ userId, isGuestCart }));
+    setIsUpdating(false);
+  }
+
+  const handleMinus = () => {
+    const q = Math.max(1, parseInt(tempQ) - 1);
+    setTempQ(q.toString());
+    commitChange(q);
+  }
+
+  const handlePlus = () => {
+    const q = parseInt(tempQ) + 1;
+    setTempQ(q.toString());
+    commitChange(q);
+  }
+
+  return (
+    <div className="flex items-center gap-2 bg-muted/50 rounded-lg p-1 relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 hover:bg-background shadow-sm shrink-0"
+        onClick={handleMinus}
+        disabled={isUpdating || parseInt(tempQ) <= 1}
+      >
+        <Minus className="h-3 w-3" />
+      </Button>
+      <Input
+        className="w-10 h-8 text-center px-0 py-1 font-semibold text-sm bg-transparent border-none shadow-none focus-visible:ring-1"
+        value={tempQ}
+        onChange={(e) => setTempQ(e.target.value)}
+        onBlur={() => {
+          const q = parseInt(tempQ);
+          if (isNaN(q) || q < 1) { setTempQ(cartItem.quantity.toString()); }
+          else { commitChange(q); }
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            const q = parseInt(tempQ);
+            if (isNaN(q) || q < 1) { setTempQ(cartItem.quantity.toString()); }
+            else { commitChange(q); }
+          }
+        }}
+        disabled={isUpdating}
+      />
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 hover:bg-background shadow-sm shrink-0"
+        onClick={handlePlus}
+        disabled={isUpdating}
+      >
+        <Plus className="h-3 w-3" />
+      </Button>
+      {isUpdating && <div className="absolute inset-0 bg-background/50 flex items-center justify-center rounded-lg backdrop-blur-[1px]"><Loader2 className="h-4 w-4 animate-spin text-primary" /></div>}
+    </div>
+  )
+}
 
 export const Cart = () => {
-  const { guestUserId, items } = useAppSelector((state) => state.cart);
+  const { guestUserId, items, loading, cartId } = useAppSelector((state) => state.cart);
   const { user } = useAppSelector((state) => state.auth);
+  const { openAuthModal } = useAuthModal();
+  const navigate = useNavigate();
+
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [savedAddress, setSavedAddress] = useState<string | null>(null);
+  const [pendingAddress, setPendingAddress] = useState(false);
+  const [pendingFormattedAddress, setPendingFormattedAddress] = useState<string | null>(null);
+  const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (user && pendingAddress && pendingFormattedAddress) {
+      setSavedAddress(pendingFormattedAddress);
+      setPendingAddress(false);
+      setPendingFormattedAddress(null);
+    }
+  }, [user, pendingAddress, pendingFormattedAddress]);
 
   useEffect(() => {
     appDispatch(
@@ -24,18 +122,57 @@ export const Cart = () => {
     );
   }, [user, guestUserId]);
 
+  const handleSaveAddress = (addressForm: any) => {
+    const { houseNo, flatNo, streetName, landmark, city, state, country, zipcode } = addressForm;
+    const formatted = `${houseNo} ${flatNo ? flatNo + ', ' : ''}${streetName}${landmark ? ", " + landmark : ""}, ${city}, ${state}, ${country} - ${zipcode}`;
+
+    if (!user) {
+      setPendingAddress(true);
+      setPendingFormattedAddress(formatted);
+      setIsAddressModalOpen(false);
+      openAuthModal();
+      return;
+    }
+
+    setSavedAddress(formatted);
+    setIsAddressModalOpen(false);
+  };
   // Placeholder functions for future implementation
-  const updateQuantity = (id: string, change: number) => {
-    console.log("Update quantity not implemented yet", id, change);
-    // TODO: Dispatch update quantity action
-  };
-
-  const removeItem = (id: string) => {
-    console.log("Remove item not implemented yet", id);
-    // TODO: Dispatch remove item action
-  };
-
   const cartItems = items || [];
+
+  const handleToggleItem = (id: string) => {
+    setSelectedItemIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
+
+  const handleToggleAll = () => {
+    if (selectedItemIds.length === cartItems.length && cartItems.length > 0) {
+      setSelectedItemIds([]);
+    } else {
+      setSelectedItemIds(cartItems.map(i => i.item.id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (!cartId || selectedItemIds.length === 0) return;
+    await appDispatch(deleteCartItems({ cartId, itemIds: selectedItemIds }));
+    setSelectedItemIds([]);
+    appDispatch(fetchCart({ userId: user?.id || guestUserId!, isGuestCart: !user }));
+  };
+
+  const handleClearCart = async () => {
+    if (!cartId) return;
+    await appDispatch(deleteCartItems({ cartId, itemIds: [] }));
+    setSelectedItemIds([]);
+    navigate("/");
+  };
+
+  const removeItem = async (id: string) => {
+    if (!cartId) return;
+    await appDispatch(deleteCartItems({ cartId, itemIds: [id] }));
+    setSelectedItemIds(prev => prev.filter(i => i !== id));
+    appDispatch(fetchCart({ userId: user?.id || guestUserId!, isGuestCart: !user }));
+  };
+
   const subtotal = cartItems.reduce((sum, cartItem) => sum + (cartItem.item.price * cartItem.quantity), 0);
   const shipping = subtotal > 100 ? 0 : 9.99;
   const tax = subtotal * 0.08;
@@ -55,15 +192,79 @@ export const Cart = () => {
                 You have <span className="font-medium text-foreground">{cartItems.length}</span> items in your cart
               </p>
             </div>
-            <Link to="/">
-              <Button variant="outline" className="gap-2 group">
-                <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-                Continue Shopping
-              </Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              {cartItems.length > 0 && (
+                <Button variant="outline" className="text-destructive hover:bg-destructive/10" onClick={handleClearCart}>
+                  Clear Cart
+                </Button>
+              )}
+              <Link to="/">
+                <Button variant="outline" className="gap-2 group">
+                  <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                  <span className="hidden sm:inline">Continue Shopping</span>
+                </Button>
+              </Link>
+            </div>
           </div>
 
-          {cartItems.length === 0 ? (
+          {loading ? (
+            <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+              <div className="lg:col-span-8 space-y-6">
+                {[1, 2].map((i) => (
+                  <Card key={i} className="overflow-hidden border-none shadow-sm bg-card/50 backdrop-blur-sm">
+                    <CardContent className="p-0">
+                      <div className="flex flex-col sm:flex-row gap-6 p-6">
+                        <div className="shrink-0">
+                          <Skeleton className="w-full sm:w-32 h-32 rounded-xl" />
+                        </div>
+                        <div className="flex-1 flex flex-col justify-between min-h-[8rem]">
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="space-y-3 w-full">
+                              <Skeleton className="h-5 w-16" />
+                              <Skeleton className="h-6 w-3/4" />
+                              <Skeleton className="h-4 w-1/2" />
+                            </div>
+                            <div className="text-right space-y-2">
+                              <Skeleton className="h-6 w-20" />
+                              <Skeleton className="h-4 w-16 ml-auto" />
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between mt-4 sm:mt-0">
+                            <Skeleton className="h-10 w-32 rounded-lg" />
+                            <Skeleton className="h-8 w-24" />
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              <div className="lg:col-span-4">
+                <div className="sticky top-24">
+                  <Card className="border-none shadow-lg bg-primary/5 dark:bg-primary/10 overflow-hidden">
+                    <CardHeader className="bg-primary/10 pb-6">
+                      <Skeleton className="h-7 w-40" />
+                    </CardHeader>
+                    <CardContent className="p-6 space-y-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between"><Skeleton className="h-5 w-20" /><Skeleton className="h-5 w-16" /></div>
+                        <div className="flex justify-between"><Skeleton className="h-5 w-32" /><Skeleton className="h-5 w-16" /></div>
+                        <div className="flex justify-between"><Skeleton className="h-5 w-24" /><Skeleton className="h-5 w-16" /></div>
+                      </div>
+                      <Separator className="bg-primary/20" />
+                      <div className="flex justify-between items-end">
+                        <Skeleton className="h-6 w-24" />
+                        <Skeleton className="h-8 w-24" />
+                      </div>
+                    </CardContent>
+                    <CardFooter className="p-6 pt-0">
+                      <Skeleton className="w-full h-12 rounded-md" />
+                    </CardFooter>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          ) : <div>{cartItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/30 rounded-3xl border-2 border-dashed">
               <div className="bg-background p-6 rounded-full shadow-sm mb-6">
                 <ShoppingBag className="h-16 w-16 text-muted-foreground/50" />
@@ -84,12 +285,33 @@ export const Cart = () => {
             <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
               {/* Cart Items List */}
               <div className="lg:col-span-8 space-y-6">
+                {cartItems.length > 0 && (
+                  <div className="flex items-center justify-between bg-card/40 border px-4 py-3 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        checked={selectedItemIds.length === cartItems.length && cartItems.length > 0}
+                        onCheckedChange={handleToggleAll}
+                      />
+                      <span className="text-sm font-medium">Select All</span>
+                    </div>
+                    {selectedItemIds.length > 0 && (
+                      <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
+                        Delete Selected ({selectedItemIds.length})
+                      </Button>
+                    )}
+                  </div>
+                )}
                 {cartItems.map((cartItem) => (
                   <Card key={cartItem.id} className="overflow-hidden border-none shadow-sm hover:shadow-md transition-shadow bg-card/50 backdrop-blur-sm">
                     <CardContent className="p-0">
                       <div className="flex flex-col sm:flex-row gap-6 p-6">
-                        {/* Product Image */}
-                        <div className="shrink-0">
+                        {/* Checkbox and Image */}
+                        <div className="shrink-0 flex items-center gap-4">
+                          <Checkbox
+                            className="mt-1 self-start sm:self-center"
+                            checked={selectedItemIds.includes(cartItem.item.id)}
+                            onCheckedChange={() => handleToggleItem(cartItem.item.id)}
+                          />
                           <div className="w-full sm:w-32 h-32 rounded-xl overflow-hidden bg-muted relative group">
                             <img
                               src={cartItem.item.images && cartItem.item.images.length > 0 ? cartItem.item.images[0] : productHeadphones}
@@ -126,31 +348,16 @@ export const Cart = () => {
                           </div>
 
                           <div className="flex items-center justify-between mt-4 sm:mt-0">
-                            <div className="flex items-center gap-3 bg-muted/50 rounded-lg p-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 hover:bg-background shadow-sm"
-                                onClick={() => updateQuantity(cartItem.id, -1)}
-                                disabled={cartItem.quantity <= 1}
-                              >
-                                <Minus className="h-3 w-3" />
-                              </Button>
-                              <span className="w-8 text-center font-semibold text-sm">{cartItem.quantity}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 hover:bg-background shadow-sm"
-                                onClick={() => updateQuantity(cartItem.id, 1)}
-                              >
-                                <Plus className="h-3 w-3" />
-                              </Button>
-                            </div>
+                            <CartItemQuantity
+                              cartItem={cartItem}
+                              userId={user?.id || guestUserId}
+                              isGuestCart={!user}
+                            />
 
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => removeItem(cartItem.id)}
+                              onClick={() => removeItem(cartItem.item.id)}
                               className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -166,7 +373,53 @@ export const Cart = () => {
 
               {/* Order Summary */}
               <div className="lg:col-span-4">
-                <div className="sticky top-24">
+                <div className="sticky top-24 space-y-6">
+                  {/* Delivery Address Form */}
+                  <Card className="border-none shadow-md overflow-hidden bg-card/60 backdrop-blur-sm">
+                    <CardHeader className="bg-primary/5 py-4 border-b">
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        Delivery Address
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-5">
+                      {!savedAddress ? (
+                        <div className="space-y-4 text-center py-2">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            No delivery address selected.
+                          </p>
+                          <Button
+                            onClick={() => setIsAddressModalOpen(true)}
+                            className="w-full font-medium shadow-sm hover:shadow-md transition-all"
+                            variant="outline"
+                          >
+                            Add Address
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-start gap-3 bg-primary/5 p-3 rounded-lg border border-primary/20">
+                            <div className="shrink-0 mt-0.5">
+                              <MapPin className="h-4 w-4 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold truncate text-foreground">Delivering to:</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5 leading-relaxed">{savedAddress}</p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsAddressModalOpen(true)}
+                            className="w-full text-xs h-8 border-primary/20 hover:bg-primary/5"
+                          >
+                            Change Address
+                          </Button>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
                   <Card className="border-none shadow-lg bg-primary/5 dark:bg-primary/10 overflow-hidden">
                     <CardHeader className="bg-primary/10 pb-6">
                       <CardTitle className="flex items-center gap-2">
@@ -221,6 +474,12 @@ export const Cart = () => {
               </div>
             </div>
           )}
+          </div>}
+          <AddressModal
+            open={isAddressModalOpen}
+            onOpenChange={setIsAddressModalOpen}
+            onSave={handleSaveAddress}
+          />
         </div>
       </main>
     </div>

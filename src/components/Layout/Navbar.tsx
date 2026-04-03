@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { appDispatch, RootState } from "@/redux/store";
-import { fetchCart } from "@/redux/thunks/cartthunk";
+import { fetchCart, fetchCartInfo } from "@/redux/thunks/cartthunk";
 import { useAppSelector } from "@/redux/hooks";
 import { useAuthModal } from "@/context/AuthModalContext";
 import { cn } from "@/lib/utils";
@@ -89,19 +89,26 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
   const { cartCount } = useAppSelector((state: RootState) => state.cart);
   const { user } = useAppSelector((state: RootState) => state.auth);
   const { categories } = useAppSelector((state: RootState) => state.home);
+  const { guestUserId, cartId } = useAppSelector((state) => state.cart);
 
   useEffect(() => {
-    appDispatch(fetchCart(null));
     if (categories.items.length === 0) {
       appDispatch(fetchCategories({ page: 1, limit: 10, loading: false, totalPages: 0, totalItems: 0 }));
     }
+    appDispatch(
+      fetchCartInfo({
+        cartId: cartId,
+        isGuestCart: !user,
+        userId: user?.id || guestUserId,
+      })
+    );
   }, []);
 
   const dummySuggestions = [
     "Dark Chocolate", "Truffles", "Gift Box", "Vegan Chocolate", "Hot Cocoa"
   ];
 
-  const { theme, setTheme } = useTheme();
+  // const { theme, setTheme } = useTheme();
 
   const gradientTextStyle = "bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600 font-bold";
   const glassButtonStyle = "bg-white/50 backdrop-blur-md hover:bg-white/80 border border-white/20 shadow-sm transition-all duration-300";
@@ -131,7 +138,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                     <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                       <span className="text-sm font-bold text-white">AE</span>
                     </div>
-                    <span className="hidden sm:block text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                    <span className="hidden sm:block text-xl font-bold bg-clip-text bg-gradient-to-r from-primary to-accent">
                       Anandini's Exotica
                     </span>
                   </div>
@@ -142,7 +149,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                       <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center shadow-lg">
                         <span className="text-sm font-bold text-white">AE</span>
                       </div>
-                      <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                      <span className="text-xl font-bold bg-clip-text bg-gradient-to-r from-primary to-accent">
                         Anandini's Exotica
                       </span>
                     </div>
@@ -178,7 +185,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                   AE
                 </span>
               </div>
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+              <span className="text-xl font-bold bg-clip-text bg-gradient-to-r from-primary to-accent">
                 Anandini's Exotica
               </span>
             </div>

@@ -67,3 +67,43 @@ export const fetchCartInfo = createAsyncThunk(
     }
   }
 );
+
+export const deleteCartItems = createAsyncThunk(
+  "cart/deleteCartItems",
+  async (
+    payload: { cartId: string; itemIds: string[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.delete(
+        API_ENDPOINTS.CART.DELETE_ITEMS(payload.cartId),
+        { data: { itemIds: payload.itemIds } }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const updateCartItemQuantity = createAsyncThunk(
+  "cart/updateCartItemQuantity",
+  async (
+    payload: { itemId: string; userId: string; isGuestCart: boolean; quantity: number },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await axiosInstance.patch(
+        API_ENDPOINTS.CART.UPDATE_ITEM_QUANTITY({
+          itemId: payload.itemId,
+          userId: payload.userId,
+          isGuestCart: payload.isGuestCart,
+        }),
+        { quantity: payload.quantity }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);

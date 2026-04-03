@@ -1,6 +1,6 @@
 // src/store/cart/cartSlice.ts
 import { createSlice } from "@reduxjs/toolkit";
-import { addToCart, fetchCart, fetchCartInfo } from "../thunks/cartthunk";
+import { addToCart, fetchCart, fetchCartInfo, deleteCartItems, updateCartItemQuantity } from "../thunks/cartthunk";
 import { CartInitialState } from "../initialstate.ts/cartinitstate";
 
 
@@ -63,6 +63,34 @@ export const cartSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchCartInfo.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // 🗑️ deleteCartItems
+    builder
+      .addCase(deleteCartItems.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deleteCartItems.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(deleteCartItems.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      });
+
+    // ✏️ updateCartItemQuantity
+    builder
+      .addCase(updateCartItemQuantity.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateCartItemQuantity.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(updateCartItemQuantity.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
