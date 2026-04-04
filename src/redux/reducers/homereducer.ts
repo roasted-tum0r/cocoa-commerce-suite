@@ -18,6 +18,9 @@ export const homereducer = createSlice({
   reducers: {
     setLastPath:(state,action:PayloadAction<string>)=>{
       state.lastPath=action.payload
+    },
+    setSearchPagination: (state, action: PayloadAction<Partial<HomeState["searchProducts"]["pagination"]>>) => {
+      state.searchProducts.pagination = { ...state.searchProducts.pagination, ...action.payload };
     }
   },
   extraReducers: (builder) => {
@@ -96,5 +99,5 @@ export const homereducer = createSlice({
   },
 });
 
-export const { setLastPath } = homereducer.actions;
+export const { setLastPath, setSearchPagination } = homereducer.actions;
 export default homereducer.reducer;

@@ -1,6 +1,7 @@
 export interface HomeState {
   categories: { items: CategoryList[]; pagination: paginationType };
   latestProducts: { items: any[]; pagination: paginationType };
+  searchProducts: { items: any[]; pagination: paginationType };
   totalProducts: number;
   totalCustomers: number;
   totalRatings: number;

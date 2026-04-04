@@ -25,6 +25,18 @@ export const HomeInitialState: HomeState = {
       isAsc: true,
     },
   },
+  searchProducts: {
+    items: [],
+    pagination: {
+      loading: false,
+      page: 1,
+      limit: 100,
+      totalPages: 1,
+      totalItems: 0,
+      sortBy: "name",
+      isAsc: true,
+    },
+  },
   totalProducts: 0,
   totalCustomers: 0,
   totalRatings: 0,
