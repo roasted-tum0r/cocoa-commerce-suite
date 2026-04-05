@@ -41,6 +41,24 @@ interface NavbarProps {
   onMenuClick?: () => void;
 }
 
+interface SuggestionItem {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  rating: number;
+  offer: any;
+  category: {
+    id: string;
+    name: string;
+  };
+}
+
+interface SuggestionCategory {
+  id: string;
+  name: string;
+}
+
 const ListItem = React.forwardRef<
   React.ElementRef<"a">,
   React.ComponentPropsWithoutRef<"a">
@@ -70,6 +88,8 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showFloatingSearch, setShowFloatingSearch] = useState(false);
+  const [suggestions, setSuggestions] = useState<{items: SuggestionItem[], categories: SuggestionCategory[]}>({items: [], categories: []});
+  const [isSearching, setIsSearching] = useState(false);
   const navigate = useNavigate();
   const { openAuthModal } = useAuthModal();
 
@@ -104,9 +124,33 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
     );
   }, []);
 
-  const dummySuggestions = [
-    "Dark Chocolate", "Truffles", "Gift Box", "Vegan Chocolate", "Hot Cocoa"
-  ];
+  useEffect(() => {
+    if (!showFloatingSearch) return;
+
+    setIsSearching(true);
+    const delayDebounceFn = setTimeout(async () => {
+      try {
+        const query = searchQuery.trim();
+        const url = query 
+          ? `https://exotix-backend.onrender.com/exotix-api/items/suggestions?search=${encodeURIComponent(query)}`
+          : `https://exotix-backend.onrender.com/exotix-api/items/suggestions`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data && data.data) {
+          setSuggestions({
+            items: data.data.items || [],
+            categories: data.data.categories || []
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching suggestions:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, showFloatingSearch]);
 
   // const { theme, setTheme } = useTheme();
 
@@ -345,20 +389,82 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                     />
                   </form>
 
-                  <div className="mt-4">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">Popular Searches</p>
-                    <div className="flex flex-wrap gap-2">
-                      {dummySuggestions.map((suggestion) => (
-                        <Badge
-                          key={suggestion}
-                          variant="secondary"
-                          className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors py-1 px-3"
-                          onClick={() => setSearchQuery(suggestion)}
-                        >
-                          {suggestion}
-                        </Badge>
-                      ))}
-                    </div>
+                  <div className="mt-4 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                    {isSearching ? (
+                      <div className="flex justify-center p-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-6">
+                        {suggestions.categories.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 px-2">Categories</p>
+                            <div className="flex flex-col rounded-lg border bg-card overflow-hidden">
+                              {suggestions.categories.map((category, idx) => (
+                                <div
+                                  key={category.id}
+                                  className={cn(
+                                    "p-3 hover:bg-muted/50 cursor-pointer flex items-center gap-3 transition-colors",
+                                    idx !== suggestions.categories.length - 1 && "border-b"
+                                  )}
+                                  onClick={() => {
+                                    setShowFloatingSearch(false);
+                                    navigate(`/categories?type=${encodeURIComponent(category.name)}`);
+                                  }}
+                                >
+                                  <div className="bg-primary/10 p-2 rounded-full hidden sm:block">
+                                    <Package className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <span className="font-medium text-sm">{category.name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {suggestions.items.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold text-muted-foreground uppercase mb-3 px-2">
+                              {searchQuery.trim() ? "Products" : "Recommended for you"}
+                            </p>
+                            <div className="flex flex-col rounded-lg border bg-card overflow-hidden">
+                              {suggestions.items.map((item, idx) => (
+                                <div
+                                  key={item.id}
+                                  className={cn(
+                                    "flex items-center gap-4 p-3 hover:bg-muted/50 cursor-pointer transition-colors",
+                                    idx !== suggestions.items.length - 1 && "border-b"
+                                  )}
+                                  onClick={() => {
+                                    setShowFloatingSearch(false);
+                                    navigate(`/product/${encodeURIComponent(item.name)}`);
+                                  }}
+                                >
+                                  <div className="h-14 w-14 rounded-md bg-muted overflow-hidden flex-shrink-0 border border-border/50">
+                                    <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                                  </div>
+                                  <div className="flex flex-col flex-1 justify-center">
+                                    <span className="font-semibold text-sm line-clamp-1">{item.name}</span>
+                                    <span className="text-xs text-muted-foreground mt-0.5">{item.category.name}</span>
+                                  </div>
+                                  <div className="font-bold text-sm text-primary">
+                                    ${item.price.toFixed(2)}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {suggestions.categories.length === 0 && suggestions.items.length === 0 && searchQuery.trim() && (
+                          <div className="text-center p-8 text-muted-foreground flex flex-col items-center justify-center">
+                            <Search className="h-8 w-8 text-muted-foreground/50 mb-3" />
+                            <p>No suggestions found for "{searchQuery}"</p>
+                            <p className="text-xs mt-1">Try checking for spelling errors or using different keywords.</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </>,

@@ -35,6 +35,7 @@ export const SearchResults = () => {
     
     const queryMinPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : "";
     const queryMaxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : "";
+    const queryIsAvailable = searchParams.get("isAvailable") !== "false"; // Default true unless explicitly false
 
     // Local form state for top search bar
     const [searchInput, setSearchInput] = useState(querySearch);
@@ -130,7 +131,7 @@ export const SearchResults = () => {
 
     // 2. Fetch Products
     const { data: productsData, isLoading: isLoadingProducts, isFetching: isFetchingProducts, isError } = useQuery({
-        queryKey: ["products", querySearch, queryCategoryIds, queryMinPrice, queryMaxPrice, searchPagination.page, searchPagination.limit, searchPagination.sortBy, searchPagination.isAsc],
+        queryKey: ["products", querySearch, queryCategoryIds, queryMinPrice, queryMaxPrice, queryIsAvailable, searchPagination.page, searchPagination.limit, searchPagination.sortBy, searchPagination.isAsc],
         queryFn: async () => {
             const res = await axiosInstance.get(
                 API_ENDPOINTS.PRODUCTS.LIST({
@@ -142,7 +143,7 @@ export const SearchResults = () => {
                     page: searchPagination.page, // Controlled via Redux for future infinite scroll
                     isAsc: searchPagination.isAsc,
                     sortBy: searchPagination.sortBy,
-                    isAvailable: true,
+                    isAvailable: queryIsAvailable,
                 })
             );
             return res.data;
@@ -175,7 +176,7 @@ export const SearchResults = () => {
                             <CardHeader className="pb-4 border-b border-border/50">
                                 <div className="flex items-center justify-between">
                                     <CardTitle className="text-xl font-bold">Filters</CardTitle>
-                                    {(queryCategoryIds.length > 0 || queryMinPrice !== "" || queryMaxPrice !== "") && (
+                                    {(queryCategoryIds.length > 0 || queryMinPrice !== "" || queryMaxPrice !== "" || !queryIsAvailable) && (
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
@@ -188,6 +189,25 @@ export const SearchResults = () => {
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-8 pt-6">
+                                {/* Availability */}
+                                <div>
+                                    <Label className="text-sm font-bold mb-4 block text-foreground uppercase tracking-wider">Availability</Label>
+                                    <div className="flex items-center space-x-3 group">
+                                        <Checkbox 
+                                            id="filter-available" 
+                                            checked={queryIsAvailable}
+                                            onCheckedChange={(checked) => updateSearchParams("isAvailable", checked ? "true" : "false")}
+                                            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                                        />
+                                        <label 
+                                            htmlFor="filter-available"
+                                            className="text-sm font-medium leading-none cursor-pointer group-hover:text-primary transition-colors"
+                                        >
+                                            In Stock Only
+                                        </label>
+                                    </div>
+                                </div>
+
                                 {/* Categories */}
                                 <div>
                                     <Label className="text-sm font-bold mb-4 block text-foreground uppercase tracking-wider">Categories</Label>
@@ -301,6 +321,14 @@ export const SearchResults = () => {
                                     <Badge variant="secondary" className="flex items-center gap-1.5 text-sm py-1.5 px-3 rounded-full bg-primary/10 hover:bg-primary/20 text-primary border-primary/20 transition-colors">
                                         Keyword: {querySearch}
                                         <button onClick={() => updateSearchParams("q", null)} className="hover:bg-primary/20 rounded-full p-0.5 transition-colors">
+                                           <X className="h-3 w-3" />
+                                        </button>
+                                    </Badge>
+                                )}
+                                {!queryIsAvailable && (
+                                    <Badge variant="secondary" className="flex items-center gap-1.5 text-sm py-1.5 px-3 rounded-full">
+                                        Include Out of Stock
+                                        <button onClick={() => updateSearchParams("isAvailable", "true")} className="hover:bg-muted-foreground/20 rounded-full p-0.5 transition-colors">
                                            <X className="h-3 w-3" />
                                         </button>
                                     </Badge>

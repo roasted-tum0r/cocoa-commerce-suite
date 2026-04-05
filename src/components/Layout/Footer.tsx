@@ -12,7 +12,7 @@ export const Footer = () => {
               <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center">
                 <span className="text-sm font-bold text-primary-foreground italic">AE</span>
               </div>
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+              <span className="text-xl font-bold bg-clip-text  bg-gradient-to-r from-primary to-accent">
                 Anandini's Exotica
               </span>
             </div>
