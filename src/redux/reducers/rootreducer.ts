@@ -4,11 +4,11 @@ import { homereducer } from './homereducer';
 import { cartSlice } from './cartreducer';
 import { authslice } from './authreducer';
 import { newsletterslice } from './newsletterreducer';
-
+import { productslice } from './productreducer';
 
 const rootReducer = combineReducers({
   auth: authslice.reducer,
-  // product: productReducer,
+  product: productslice.reducer,
   home: homereducer.reducer,
   cart: cartSlice.reducer,
   newsletter: newsletterslice.reducer,

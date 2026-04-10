@@ -14,6 +14,16 @@ export interface HomeState {
   lastPath?: string;
 }
 
+export interface ProductState {
+  productDetails: Product | null;
+  reviews: { items: Review[]; pagination: paginationType };
+  similarItems: { items: Product[]; pagination: paginationType };
+  alsoLikeItems: { items: Product[]; pagination: paginationType };
+  alsoBoughtItems: { items: Product[]; pagination: paginationType };
+  loading: boolean;
+  error: string | null;
+}
+
 export interface CategoryList {
   id: string;
   name: string;

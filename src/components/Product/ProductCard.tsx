@@ -104,7 +104,7 @@ export const ProductCard = ({
               ))}
             </div>
             <span className="text-xs text-muted-foreground">
-              ({product.reviews.length})
+              ({product.reviews?.length})
             </span>
           </div>
 

@@ -9,14 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, ArrowLeft, Share2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { ModernImage } from "@/components/ui/ModernImage";
-import { Loader2 } from "lucide-react";
-import axiosInstance from "@/interceptors/apiInterceptor";
-import { API_ENDPOINTS } from "@/utility/endpoints";
-import { Skeleton } from "@/components/ui/skeleton";
+import { addToCart } from "@/redux/thunks/cartthunk";
 import { appDispatch } from "@/redux/store";
+import { ProductCarouselSection } from "@/components/Product/ProductCarouselSection";
+import { Textarea } from "@/components/ui/textarea";
+import { fetchProductDetails, fetchProductReviews, fetchAlsoBoughtItems, fetchAlsoLikeItems, fetchSimilarItems, submitProductReview } from "@/redux/thunks/productthunk";
+import { clearProductState } from "@/redux/reducers/productreducer";
 
 export const ProductDetail = () => {
   const { id } = useParams();
@@ -25,10 +28,12 @@ export const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   
-  const [productDetails, setProductDetails] = useState<any>(null);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const state = useAppSelector((state) => state.product);
+  const { productDetails: product, reviews: { items: reviews }, loading, error } = state;
+
+  const [reviewContent, setReviewContent] = useState("");
+  const [reviewRating, setReviewRating] = useState(5);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const { toast } = useToast();
   const dispatch = useAppDispatch();
@@ -38,27 +43,45 @@ export const ProductDetail = () => {
   const { guestUserId } = useAppSelector((state) => state.cart);
 
   useEffect(() => {
-    const fetchProductData = async () => {
-      if (!id) return;
-      try {
-        setLoading(true);
-        const [detailsRes, reviewsRes] = await Promise.all([
-          axiosInstance.get(API_ENDPOINTS.PRODUCTS.DETAILS(id)),
-          axiosInstance.get(API_ENDPOINTS.REVIEWS.ITEM_REVIEWS(id, { page: 1, limit: 10, sortBy: 'createdAt', isAsc: false }))
-        ]);
-        setProductDetails(detailsRes.data);
-        setReviews(reviewsRes.data.results || []);
-      } catch (err: any) {
-        console.error("Failed to fetch product data", err);
-        setError("Failed to load product details.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProductData();
-  }, [id]);
+    if (!id) return;
+    
+    // Clear old state before fetching new
+    dispatch(clearProductState());
+    
+    // Fetch base
+    dispatch(fetchProductDetails(id));
+    dispatch(fetchProductReviews({ id, pagination: { page: 1, limit: 10, sortBy: 'createdAt', isAsc: false } as any }));
+    
+    // Fetch Recommendations
+    const payload = { page: 1, limit: 6, sortBy: 'name', isAsc: true };
+    dispatch(fetchSimilarItems({ id, pagination: payload as any }));
+    dispatch(fetchAlsoLikeItems({ id, pagination: payload as any }));
+    dispatch(fetchAlsoBoughtItems({ id, pagination: payload as any }));
+  }, [id, dispatch]);
 
-  const product = productDetails;
+  const handleSubmitReview = async () => {
+    if (!reviewContent.trim() || reviewRating < 1 || reviewRating > 5) return;
+    try {
+      setIsSubmittingReview(true);
+      const payload = {
+        reviewType: "ITEM",
+        itemId: id!,
+        content: reviewContent,
+        rating: reviewRating
+      };
+      await dispatch(submitProductReview(payload)).unwrap();
+      toast({ title: "Review Submitted", description: "Thank you for your feedback!" });
+      setReviewContent("");
+      setReviewRating(5);
+      
+      // refetch reviews list natively via thunk
+      dispatch(fetchProductReviews({ id: id!, pagination: { page: 1, limit: 10, sortBy: 'createdAt', isAsc: false } as any }));
+    } catch (err) {
+      toast({ title: "Error", description: "Failed to submit review. You must have purchased this item first.", variant: "destructive" });
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -280,9 +303,76 @@ export const ProductDetail = () => {
               </div>
             </div>
 
+            {/* Related Carousels Section */}
+            <div className="mt-16 space-y-4">
+              <ProductCarouselSection 
+                title="Similar Items" 
+                itemId={id!} 
+                items={state.similarItems.items}
+                loading={state.similarItems.pagination.loading}
+                fetchEndpointThunk={fetchSimilarItems}
+              />
+              <ProductCarouselSection 
+                title="Items You May Like" 
+                itemId={id!} 
+                items={state.alsoLikeItems.items}
+                loading={state.alsoLikeItems.pagination.loading}
+                fetchEndpointThunk={fetchAlsoLikeItems}
+              />
+              <ProductCarouselSection 
+                title="People Also Bought" 
+                itemId={id!} 
+                items={state.alsoBoughtItems.items}
+                loading={state.alsoBoughtItems.pagination.loading}
+                fetchEndpointThunk={fetchAlsoBoughtItems}
+              />
+            </div>
+
             {/* Reviews Section */}
-            <div className="mt-16">
-              <h2 className="text-3xl font-bold mb-8">Customer Reviews</h2>
+            <div className="mt-16 border-t pt-16">
+              <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                <h2 className="text-3xl font-bold">Customer Reviews</h2>
+              </div>
+              
+              {user && (
+                <Card className="mb-8 border-primary/20 shadow-sm bg-primary/5">
+                  <CardContent className="p-6 md:p-8">
+                    <h3 className="text-xl font-semibold mb-4">Write a Review</h3>
+                    <div className="space-y-6">
+                      <div>
+                        <span className="text-sm font-medium mb-2 block">Rating</span>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }, (_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-8 w-8 cursor-pointer transition-colors hover:scale-110 ${i < reviewRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
+                              onClick={() => setReviewRating(i + 1)}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium mb-2 block">Your Review</span>
+                        <Textarea 
+                          placeholder="What did you like or dislike? What did you use this product for?"
+                          className="resize-none h-24"
+                          value={reviewContent}
+                          onChange={(e) => setReviewContent(e.target.value)}
+                        />
+                      </div>
+                      <Button 
+                        onClick={handleSubmitReview} 
+                        disabled={isSubmittingReview || !reviewContent.trim()}
+                        className="w-full sm:w-auto mt-2"
+                      >
+                        {isSubmittingReview && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Submit Review
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {reviews.map((review: any, index: number) => (
                   <Card key={index} className="bg-muted/20 border-none shadow-sm">

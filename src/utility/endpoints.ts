@@ -37,8 +37,33 @@ export const API_ENDPOINTS = {
       return `items/list${query.toString() ? `?${query.toString()}` : ""}`;
     },
     DETAILS: (id: string) => `items/details/${id}`,
+    SIMILAR: (id: string, params?: { limit?: number; page?: number; sortBy?: string; isAsc?: boolean }) => {
+      const query = new URLSearchParams();
+      if (params?.limit) query.append("limit", params.limit.toString());
+      if (params?.page) query.append("page", params.page.toString());
+      if (params?.sortBy) query.append("sortBy", params.sortBy);
+      if (params?.isAsc !== undefined) query.append("isAsc", params.isAsc.toString());
+      return `items/details/${id}/similar${query.toString() ? `?${query.toString()}` : ""}`;
+    },
+    ALSO_LIKE: (id: string, params?: { limit?: number; page?: number; sortBy?: string; isAsc?: boolean }) => {
+      const query = new URLSearchParams();
+      if (params?.limit) query.append("limit", params.limit.toString());
+      if (params?.page) query.append("page", params.page.toString());
+      if (params?.sortBy) query.append("sortBy", params.sortBy);
+      if (params?.isAsc !== undefined) query.append("isAsc", params.isAsc.toString());
+      return `items/details/${id}/also-like${query.toString() ? `?${query.toString()}` : ""}`;
+    },
+    ALSO_BOUGHT: (id: string, params?: { limit?: number; page?: number; sortBy?: string; isAsc?: boolean }) => {
+      const query = new URLSearchParams();
+      if (params?.limit) query.append("limit", params.limit.toString());
+      if (params?.page) query.append("page", params.page.toString());
+      if (params?.sortBy) query.append("sortBy", params.sortBy);
+      if (params?.isAsc !== undefined) query.append("isAsc", params.isAsc.toString());
+      return `items/details/${id}/also-bought${query.toString() ? `?${query.toString()}` : ""}`;
+    },
   },
   REVIEWS: {
+    CREATE: "reviews",
     ITEM_REVIEWS: (id: string, params?: { page?: number; limit?: number; sortBy?: string; isAsc?: boolean }) => {
       const query = new URLSearchParams();
 
