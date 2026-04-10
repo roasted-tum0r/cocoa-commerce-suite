@@ -36,6 +36,21 @@ export const API_ENDPOINTS = {
 
       return `items/list${query.toString() ? `?${query.toString()}` : ""}`;
     },
+    DETAILS: (id: string) => `items/details/${id}`,
+  },
+  REVIEWS: {
+    ITEM_REVIEWS: (id: string, params?: { page?: number; limit?: number; sortBy?: string; isAsc?: boolean }) => {
+      const query = new URLSearchParams();
+
+      if (params) {
+        if (params.page !== undefined) query.append("page", params.page.toString());
+        if (params.limit !== undefined) query.append("limit", params.limit.toString());
+        if (params.sortBy !== undefined) query.append("sortBy", params.sortBy);
+        if (params.isAsc !== undefined) query.append("isAsc", String(params.isAsc));
+      }
+
+      return `reviews/item/${id}${query.toString() ? `?${query.toString()}` : ""}`;
+    },
   },
   CART: {
     ADD_TO_CART: "cart/add-to-cart",

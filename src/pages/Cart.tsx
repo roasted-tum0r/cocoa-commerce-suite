@@ -331,7 +331,7 @@ export const Cart = () => {
                                 </Badge>
                               </div>
                               <h3 className="text-lg font-semibold leading-tight mb-1">
-                                <Link to={`/product/${encodeURIComponent(cartItem.item.name)}`} className="hover:text-primary transition-colors">
+                                <Link to={`/product/${cartItem.item.id}`} className="hover:text-primary transition-colors">
                                   {cartItem.item.name}
                                 </Link>
                               </h3>

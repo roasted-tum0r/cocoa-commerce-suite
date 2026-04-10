@@ -28,7 +28,7 @@ export const ProductCard = ({
 
   const handleCardClick = () => {
     dispatch(setLastPath(location.pathname));
-    navigate(`/product/${encodeURIComponent(product.name)}`);
+    navigate(`/product/${product.id}`);
   };
 
   return (

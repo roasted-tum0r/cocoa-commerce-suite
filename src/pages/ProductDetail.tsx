@@ -12,31 +12,76 @@ import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, ArrowLeft, Share2 
 import { useToast } from "@/hooks/use-toast";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { ModernImage } from "@/components/ui/ModernImage";
-import { addToCart } from "@/redux/thunks/cartthunk";
+import { Loader2 } from "lucide-react";
+import axiosInstance from "@/interceptors/apiInterceptor";
+import { API_ENDPOINTS } from "@/utility/endpoints";
+import { Skeleton } from "@/components/ui/skeleton";
 import { appDispatch } from "@/redux/store";
 
 export const ProductDetail = () => {
-  const { name } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  
+  const [productDetails, setProductDetails] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const { toast } = useToast();
   const dispatch = useAppDispatch();
 
-  const { lastPath, latestProducts } = useAppSelector((state) => state.home);
+  const { lastPath } = useAppSelector((state) => state.home);
   const { user } = useAppSelector((state) => state.auth);
   const { guestUserId } = useAppSelector((state) => state.cart);
 
-  // Find product by name (decode URI component first)
-  const decodedName = decodeURIComponent(name || "");
-  const product = latestProducts.items.find(p => p.name === decodedName);
+  useEffect(() => {
+    const fetchProductData = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const [detailsRes, reviewsRes] = await Promise.all([
+          axiosInstance.get(API_ENDPOINTS.PRODUCTS.DETAILS(id)),
+          axiosInstance.get(API_ENDPOINTS.REVIEWS.ITEM_REVIEWS(id, { page: 1, limit: 10, sortBy: 'createdAt', isAsc: false }))
+        ]);
+        setProductDetails(detailsRes.data);
+        setReviews(reviewsRes.data.results || []);
+      } catch (err: any) {
+        console.error("Failed to fetch product data", err);
+        setError("Failed to load product details.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProductData();
+  }, [id]);
 
-  if (!product) {
+  const product = productDetails;
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center flex-col gap-4">
-        <h2 className="text-2xl font-bold">Product not found</h2>
-        <Button onClick={() => navigate("/")}>Go Home</Button>
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
+        <div className="flex-1 container mx-auto px-4 py-8 flex flex-col items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground animate-pulse">Loading product details...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <Navbar onMenuClick={() => setIsSidebarOpen(true)} />
+        <div className="min-h-[60vh] flex items-center justify-center flex-col gap-4">
+          <h2 className="text-2xl font-bold">{error || "Product not found"}</h2>
+          <Button onClick={() => navigate("/")}>Go Home</Button>
+        </div>
+        <Footer />
       </div>
     );
   }
@@ -141,11 +186,11 @@ export const ProductDetail = () => {
                   </h1>
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-1 bg-yellow-50 dark:bg-yellow-900/20 px-3 py-1 rounded-full">
-                      <div className="flex">{renderStars(product.rating)}</div>
-                      <span className="text-sm font-medium ml-1">{product.rating}</span>
+                      <div className="flex">{renderStars(product.rating || 0)}</div>
+                      <span className="text-sm font-medium ml-1">{product.rating || 0}</span>
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      ({product.reviews.length} verified reviews)
+                      ({reviews.length} verified reviews)
                     </span>
                   </div>
                 </div>
@@ -239,7 +284,7 @@ export const ProductDetail = () => {
             <div className="mt-16">
               <h2 className="text-3xl font-bold mb-8">Customer Reviews</h2>
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {product.reviews.map((review, index) => (
+                {reviews.map((review: any, index: number) => (
                   <Card key={index} className="bg-muted/20 border-none shadow-sm">
                     <CardContent className="p-6">
                       <div className="flex items-start gap-4 mb-4">
@@ -248,15 +293,21 @@ export const ProductDetail = () => {
                         </Avatar>
                         <div>
                           <h4 className="font-semibold">{review.user?.name || "Anonymous"}</h4>
-                          <div className="flex mt-1">{renderStars(review.rating)}</div>
+                          <div className="flex mt-1">{renderStars(review.rating || 5)}</div>
                         </div>
                       </div>
                       <p className="text-muted-foreground">{review.comment}</p>
                     </CardContent>
                   </Card>
                 ))}
-                {product.reviews.length === 0 && (
-                  <p className="text-muted-foreground col-span-full text-center py-8">No reviews yet. Be the first to review!</p>
+                {reviews.length === 0 && (
+                  <div className="col-span-full py-12 px-6 flex flex-col items-center justify-center text-center bg-muted/10 rounded-2xl border border-dashed">
+                    <div className="bg-background p-4 rounded-full shadow-sm mb-4">
+                      <Star className="h-8 w-8 text-muted-foreground/40" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">No reviews yet</h3>
+                    <p className="text-muted-foreground max-w-md">There are no reviews for this product yet. Purchase this product to be the first one to share your thoughts!</p>
+                  </div>
                 )}
               </div>
             </div>

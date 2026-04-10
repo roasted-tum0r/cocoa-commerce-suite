@@ -437,7 +437,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                                   )}
                                   onClick={() => {
                                     setShowFloatingSearch(false);
-                                    navigate(`/product/${encodeURIComponent(item.name)}`);
+                                    navigate(`/product/${item.id}`);
                                   }}
                                 >
                                   <div className="h-14 w-14 rounded-md bg-muted overflow-hidden flex-shrink-0 border border-border/50">
