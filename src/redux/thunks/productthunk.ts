@@ -114,9 +114,75 @@ export const fetchAlsoBoughtItems = createAsyncThunk(
 
 export const submitProductReview = createAsyncThunk(
   "product/submitProductReview",
-  async (payload: { reviewType: string, itemId: string, content: string, rating: number }, { rejectWithValue }) => {
+  async (payload: { reviewType: string, itemId: string, content: string, rating: number, images?: { publicId: string, url: string }[] }, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post(API_ENDPOINTS.REVIEWS.CREATE, payload);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+// Supported owner types — extend this enum as new sections need uploads
+export type MediaOwnerType = "REVIEW" | "ITEM" | "USER" | "CATEGORY";
+
+export const uploadMedia = createAsyncThunk(
+  "product/uploadMedia",
+  async (
+    { files, ownerType, callbackfn }: { files: File[]; ownerType: MediaOwnerType, callbackfn?: (data: any) => void },
+    { rejectWithValue }
+  ) => {
+    try {
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("files", file);
+      });
+      formData.append("ownerType", ownerType);
+      const res: any = await axiosInstance.post(API_ENDPOINTS.UPLOAD, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (callbackfn) {
+        callbackfn(res.files);
+      }
+      return res.files;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+export const deleteProductReview = createAsyncThunk(
+  "product/deleteProductReview",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.delete(API_ENDPOINTS.REVIEWS.DELETE(id));
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+export const updateProductReview = createAsyncThunk(
+  "product/updateProductReview",
+  async ({ id, payload }: { id: string, payload: { content?: string, rating?: number, imagesToDelete?: string[], imagesToAdd?: { publicId: string, url: string }[] } }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.patch(API_ENDPOINTS.REVIEWS.UPDATE(id), payload);
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+export const deleteMediaFiles = createAsyncThunk(
+  "product/deleteMediaFiles",
+  async (publicIds: string[], { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.delete(API_ENDPOINTS.UPLOAD, {
+        data: { publicIds }
+      });
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);

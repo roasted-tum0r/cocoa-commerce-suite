@@ -1,6 +1,5 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/Layout/Navbar";
 import { Sidebar } from "@/components/Layout/Sidebar";
 import { Footer } from "@/components/Layout/Footer";
@@ -12,8 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { X, Search, Filter, Loader2, Frown } from "lucide-react";
-import axiosInstance from "@/interceptors/apiInterceptor";
-import { API_ENDPOINTS } from "@/utility/endpoints";
+import { fetchSearchProducts, fetchCategories } from "@/redux/thunks/homethunk";
 import { useAppSelector, useAppDispatch } from "@/redux/hooks";
 import { addToCart } from "@/redux/thunks/cartthunk";
 
@@ -24,7 +22,9 @@ export const SearchResults = () => {
     // Auth & Redux
     const { user } = useAppSelector((state) => state.auth);
     const { guestUserId } = useAppSelector((state) => state.cart);
-    const searchPagination = useAppSelector((state) => state.home?.searchProducts?.pagination) || { page: 1, limit: 100, isAsc: true, sortBy: "name" };
+    const { items: products, pagination: searchPagination } = useAppSelector((state) => state.home?.searchProducts) || { items: [], pagination: { page: 1, limit: 100, isAsc: true, sortBy: "name", loading: false } };
+    const { items: categories, pagination: categoriesPagination } = useAppSelector((state) => state.home?.categories) || { items: [], pagination: { loading: false } };
+    const { error: homeError } = useAppSelector((state) => state.home);
     const appDispatch = useAppDispatch();
 
     // Query Params State
@@ -113,44 +113,51 @@ export const SearchResults = () => {
     };
 
     // Queries
-    // 1. Fetch Categories
-    const { data: categoriesData, isLoading: isLoadingCategories } = useQuery({
-        queryKey: ["categories"],
-        queryFn: async () => {
-            const res = await axiosInstance.post(API_ENDPOINTS.CATEGORIES.FIND_ALL, {
+    // 1. Fetch Categories via Redux Thunk
+    useEffect(() => {
+        if (categories.length === 0) {
+            appDispatch(fetchCategories({
                 limit: 100, // Fetch all for sidebar
                 page: 1,
                 isAsc: true,
                 sortBy: "name",
-            });
-            return res.data;
-        },
-    });
+            }));
+        }
+    }, [appDispatch, categories.length]);
     
-    const categories = categoriesData?.results || [];
+    const isLoadingCategories = categoriesPagination.loading;
 
-    // 2. Fetch Products
-    const { data: productsData, isLoading: isLoadingProducts, isFetching: isFetchingProducts, isError } = useQuery({
-        queryKey: ["products", querySearch, queryCategoryIds, queryMinPrice, queryMaxPrice, queryIsAvailable, searchPagination.page, searchPagination.limit, searchPagination.sortBy, searchPagination.isAsc],
-        queryFn: async () => {
-            const res = await axiosInstance.get(
-                API_ENDPOINTS.PRODUCTS.LIST({
-                    search: querySearch || undefined,
-                    categoryIds: queryCategoryIds.length > 0 ? queryCategoryIds : undefined,
-                    minPrice: queryMinPrice !== "" ? Number(queryMinPrice) : undefined,
-                    maxPrice: queryMaxPrice !== "" ? Number(queryMaxPrice) : undefined,
-                    limit: searchPagination.limit,
-                    page: searchPagination.page, // Controlled via Redux for future infinite scroll
-                    isAsc: searchPagination.isAsc,
-                    sortBy: searchPagination.sortBy,
-                    isAvailable: queryIsAvailable,
-                })
-            );
-            return res.data;
-        },
-    });
+    // 2. Fetch Products via Redux Thunk
+    useEffect(() => {
+        appDispatch(
+            fetchSearchProducts({
+                search: querySearch || undefined,
+                categoryIds: queryCategoryIds.length > 0 ? queryCategoryIds : undefined,
+                minPrice: queryMinPrice !== "" ? Number(queryMinPrice) : undefined,
+                maxPrice: queryMaxPrice !== "" ? Number(queryMaxPrice) : undefined,
+                limit: searchPagination.limit,
+                page: searchPagination.page, // Controlled via Redux for future infinite scroll
+                isAsc: searchPagination.isAsc,
+                sortBy: searchPagination.sortBy,
+                isAvailable: queryIsAvailable,
+            })
+        );
+    }, [
+        appDispatch, 
+        querySearch, 
+        queryCategoryIds.join(","), 
+        queryMinPrice, 
+        queryMaxPrice, 
+        queryIsAvailable, 
+        searchPagination.page, 
+        searchPagination.limit, 
+        searchPagination.sortBy, 
+        searchPagination.isAsc
+    ]);
 
-    const products = productsData?.results || [];
+    const isFetchingProducts = searchPagination.loading;
+    const isLoadingProducts = searchPagination.loading && products.length === 0;
+    const isError = !!homeError;
 
     return (
         <div className="min-h-screen bg-gradient-secondary flex flex-col">
@@ -365,7 +372,7 @@ export const SearchResults = () => {
                         </div>
 
                         {/* Results Grid State */}
-                        {(isLoadingProducts && !productsData) || isFetchingProducts ? (
+                        {(isLoadingProducts) || isFetchingProducts ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {[...Array(8)].map((_, i) => (
                                     <div key={i} className="animate-pulse bg-card border rounded-2xl shadow-sm h-[380px] w-full overflow-hidden flex flex-col">

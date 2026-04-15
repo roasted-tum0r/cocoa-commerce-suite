@@ -1,5 +1,6 @@
 import axiosInstance from "@/interceptors/apiInterceptor";
 import { API_ENDPOINTS } from "@/utility/endpoints";
+import { setAccessToken } from "@/utility/token";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 // Register User
@@ -43,6 +44,7 @@ export const verifyOtp = createAsyncThunk(
         API_ENDPOINTS.AUTH.VERIFY_OTP,
         payload
       );
+      setAccessToken(response.data.accesstoken);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data || error.message);

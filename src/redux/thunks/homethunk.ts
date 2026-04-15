@@ -12,7 +12,7 @@ export const fetchCategories = createAsyncThunk(
       limit = 10,
       sortBy = "createdAt",
       isAsc = true,
-    }: paginationType,
+    }: Partial<paginationType>,
     { rejectWithValue }
   ) => {
     try {
@@ -58,6 +58,45 @@ export const fetchLatestProducts = createAsyncThunk(
           totalItems: data.meta.total,
           limit: params.limit ?? 10,
           sortBy: params.sortBy ?? "createdAt",
+          isAsc: params.isAsc ?? true,
+          loading: false,
+        },
+      };
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+// Fetch search products
+export const fetchSearchProducts = createAsyncThunk(
+  "home/fetchSearchProducts",
+  async (params: FetchLatestProductsParams, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get(
+        API_ENDPOINTS.PRODUCTS.LIST({
+          page: params.page ?? 1,
+          limit: params.limit ?? 100,
+          sortBy: params.sortBy ?? "name",
+          isAsc: params.isAsc ?? true,
+          isAvailable: params.isAvailable ?? true,
+          categoryIds: params.categoryIds ?? [],
+          search: params.search ?? "",
+          minPrice: params.minPrice,
+          maxPrice: params.maxPrice,
+        })
+      );
+
+      const { data } = res;
+
+      return {
+        items: data.results,
+        pagination: {
+          page: data.meta.currentPage,
+          totalPages: data.meta.totalPages,
+          totalItems: data.meta.total,
+          limit: params.limit ?? 100,
+          sortBy: params.sortBy ?? "name",
           isAsc: params.isAsc ?? true,
           loading: false,
         },

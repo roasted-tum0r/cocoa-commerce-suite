@@ -64,6 +64,8 @@ export const API_ENDPOINTS = {
   },
   REVIEWS: {
     CREATE: "reviews",
+    DELETE: (id: string) => `reviews/${id}`,
+    UPDATE: (id: string) => `reviews/${id}`,
     ITEM_REVIEWS: (id: string, params?: { page?: number; limit?: number; sortBy?: string; isAsc?: boolean }) => {
       const query = new URLSearchParams();
 
@@ -123,4 +125,5 @@ export const API_ENDPOINTS = {
     SUBSCRIBE: "newsletter-subs",
     UNSUBSCRIBE: (email: string) => `newsletter-subs/unsubscribe?email=${encodeURIComponent(email)}`,
   },
+  UPLOAD: "upload",
 };

@@ -6,6 +6,7 @@ import {
   fetchCartItems,
   fetchWishlistItems,
   fetchNotifications,
+  fetchSearchProducts,
 } from "../thunks/homethunk";
 import { HomeState } from "../types";
 import { HomeInitialState } from "../initialstate.ts/homeinitstate";
@@ -64,6 +65,21 @@ export const homereducer = createSlice({
         state.latestProducts.pagination = action.payload.pagination;
       })
       .addCase(fetchLatestProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+
+      // Search Products
+      .addCase(fetchSearchProducts.pending, (state) => {
+        state.loading = true;
+        state.searchProducts.pagination.loading = true;
+      })
+      .addCase(fetchSearchProducts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.searchProducts.items = action.payload.items;
+        state.searchProducts.pagination = action.payload.pagination;
+      })
+      .addCase(fetchSearchProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

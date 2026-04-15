@@ -22,7 +22,7 @@ export const ModernImage: React.FC<ModernImageProps> = ({
         setHasError(true);
         if (onError) onError(e);
     };
-
+    console.log(src,'src')
     return (
         <div className={cn("relative overflow-hidden flex items-center justify-center", containerClassName)}>
             {hasError ? (
