@@ -53,7 +53,7 @@ export const ProductDetail = () => {
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [viewerImages, setViewerImages] = useState<{url: string, type?: string}[]>([]);
+  const [viewerImages, setViewerImages] = useState<{ url: string, type?: string }[]>([]);
   const [viewerInitialIndex, setViewerInitialIndex] = useState(0);
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [viewerAuthor, setViewerAuthor] = useState<string>("");
@@ -62,6 +62,7 @@ export const ProductDetail = () => {
   // Edit Review State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
+  const [deletingReviewId, setDeletingReviewId] = useState<string | null>(null);
   const [editReviewContent, setEditReviewContent] = useState("");
   const [editReviewRating, setEditReviewRating] = useState(5);
   const [editExistingImages, setEditExistingImages] = useState<{ publicId: string, url: string }[]>([]);
@@ -154,12 +155,14 @@ export const ProductDetail = () => {
       // 1. Upload media first (if attached). Backend tags it as 'temp'.
       if (reviewMediaFiles.length > 0) {
         setIsUploadingMedia(true);
-        await dispatch(uploadMedia({ files: reviewMediaFiles, ownerType: "REVIEW", callbackfn: (data) => {
-          imagesArray = data.map((f: any) => ({
-            url: f.url,
-            publicId: f.public_id || f.publicId
-          }));
-        } })).unwrap();
+        await dispatch(uploadMedia({
+          files: reviewMediaFiles, ownerType: "REVIEW", callbackfn: (data) => {
+            imagesArray = data.map((f: any) => ({
+              url: f.url,
+              publicId: f.public_id || f.publicId
+            }));
+          }
+        })).unwrap();
         // const uploadedFiles = Array.isArray(uploadRes) ? uploadRes : uploadRes?.files;
         // if (uploadedFiles && uploadedFiles.length > 0) {
         //   imagesArray = uploadedFiles.map((f: any) => ({
@@ -197,11 +200,14 @@ export const ProductDetail = () => {
 
   const handleDeleteReview = async (reviewId: string) => {
     try {
+      setDeletingReviewId(reviewId);
       await dispatch(deleteProductReview(reviewId)).unwrap();
       toast({ title: "Review Deleted", description: "Your review has been successfully removed." });
       dispatch(fetchProductReviews({ id: id!, pagination: { page: 1, limit: 10, sortBy: 'createdAt', isAsc: false } as any }));
     } catch (err) {
       toast({ title: "Error", description: "Failed to delete review", variant: "destructive" });
+    } finally {
+      setDeletingReviewId(null);
     }
   };
 
@@ -212,8 +218,8 @@ export const ProductDetail = () => {
     // review.images comes from API, so they have url and publicId unless they are just strings (some old data might be string array). Let's safely map.
     const mappedImages = (review.images || []).map((img: any) => {
       if (typeof img === 'string') return { url: img, publicId: img };
-      return { url: img.imageUrl || img.url, publicId: img.publicId };
-    }).filter((img: any) => img.publicId); // Must have a truthy publicId to be deletable
+      return { url: img.imageUrl || img.url, publicId: img.publicId, id: img.id };
+    }); // Ensure we have something to show
 
     setEditExistingImages(mappedImages);
     setEditImagesToDelete([]);
@@ -241,31 +247,20 @@ export const ProductDetail = () => {
     setEditNewMediaPreviews(newPreviews);
   };
 
-  const removeEditExistingMedia = async (index: number) => {
+  const removeEditExistingMedia = (index: number) => {
     const imgToRemove = editExistingImages[index];
     if (imgToRemove && imgToRemove.publicId) {
-      try {
-        await dispatch(deleteMediaFiles([imgToRemove.publicId])).unwrap();
-        setEditImagesToDelete(prev => [...prev, imgToRemove.publicId]);
-        setEditExistingImages(prev => prev.filter((_, i) => i !== index));
-      } catch (err) {
-        toast({ title: "Error", description: "Failed to delete image.", variant: "destructive" });
-      }
+      setEditImagesToDelete(prev => [...prev, imgToRemove.publicId]);
+      setEditExistingImages(prev => prev.filter((_, i) => i !== index));
     }
   };
 
-  const clearAllEditMedia = async () => {
+  const clearAllEditMedia = () => {
     // Delete existing ones
     const publicIdsToDel = editExistingImages.map(img => img.publicId).filter(Boolean);
     if (publicIdsToDel.length > 0) {
-      try {
-        await dispatch(deleteMediaFiles(publicIdsToDel)).unwrap();
-        setEditImagesToDelete(prev => [...prev, ...publicIdsToDel]);
-        setEditExistingImages([]);
-      } catch (err) {
-        toast({ title: "Error", description: "Failed to clear existing images.", variant: "destructive" });
-        return;
-      }
+      setEditImagesToDelete(prev => [...prev, ...publicIdsToDel]);
+      setEditExistingImages([]);
     }
 
     // Clear new ones
@@ -294,21 +289,23 @@ export const ProductDetail = () => {
       // 1. Upload new media (if attached)
       if (editNewMediaFiles.length > 0) {
         setIsUploadingEditMedia(true);
-        await dispatch(uploadMedia({ files: editNewMediaFiles, ownerType: "REVIEW", callbackfn: (data) => {
-          imagesToAddArray = data.map((f: any) => ({
-            url: f.url,
-            publicId: f.public_id || f.publicId
-          }));
-        } })).unwrap();
+        await dispatch(uploadMedia({
+          files: editNewMediaFiles, ownerType: "REVIEW", callbackfn: (data) => {
+            imagesToAddArray = data.map((f: any) => ({
+              url: f.url,
+              publicId: f.public_id || f.publicId
+            }));
+          }
+        })).unwrap();
         setIsUploadingEditMedia(false);
       }
-
+      console.log(editImagesToDelete, 'what am i getting')
       // 2. Submit the patch map
       const payload = {
         content: editReviewContent,
         rating: editReviewRating,
-        imagesToDelete: editImagesToDelete,
-        imagesToAdd: imagesToAddArray
+        imagesToDelete: editImagesToDelete ?? [],
+        imagesToAdd: imagesToAddArray ?? []
       };
 
       await dispatch(updateProductReview({ id: editingReviewId, payload })).unwrap();
@@ -585,7 +582,7 @@ export const ProductDetail = () => {
               </div>
 
               <div className="flex flex-col lg:flex-row gap-8 items-start">
-                
+
                 {/* Left Side: Reviews List (60%) */}
                 <div className="w-full lg:w-[60%] order-2 lg:order-1 max-h-[800px] overflow-y-auto pr-2 hide-scrollbar">
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
@@ -619,9 +616,27 @@ export const ProductDetail = () => {
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => handleDeleteReview(review.id)}>
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete
+                                  <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive" 
+                                    onClick={(e) => {
+                                      if (deletingReviewId === review.id) {
+                                        e.preventDefault();
+                                        return;
+                                      }
+                                      handleDeleteReview(review.id);
+                                    }}
+                                  >
+                                    {deletingReviewId === review.id ? (
+                                      <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Deleting...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        Delete
+                                      </>
+                                    )}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
