@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, ArrowLeft, Share2, Paperclip, X, Film, ImageIcon, MoreVertical, Edit, Trash2, CheckCircle } from "lucide-react";
 import { Loader2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,

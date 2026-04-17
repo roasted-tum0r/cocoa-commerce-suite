@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { AuthInitialState } from "../initialstate.ts/authinitstate";
-import { loginUser, registerUser, verifyOtp } from "../thunks/auththunk";
+import { loginUser, registerUser, verifyOtp, fetchUserDetails, updateAuthUser } from "../thunks/auththunk";
 
 export const authslice = createSlice({
   name: "auth",
@@ -74,6 +74,44 @@ export const authslice = createSlice({
       state.identifier = null;
     });
     builder.addCase(verifyOtp.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+
+    // Fetch User Details
+    builder.addCase(fetchUserDetails.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchUserDetails.fulfilled, (state, action) => {
+      state.loading = false;
+      state.userDetails = action.payload;
+    });
+    builder.addCase(fetchUserDetails.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload as string;
+    });
+
+    // Update Auth User
+    builder.addCase(updateAuthUser.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(updateAuthUser.fulfilled, (state, action) => {
+      state.loading = false;
+      // Sync local userDetails with updated data
+      state.userDetails = action.payload.data;
+      
+      // Keep basic user info synced too
+      if (state.user) {
+        state.user.firstname = action.payload.data?.firstname || state.user.firstname;
+        state.user.lastname = action.payload.data?.lastname || state.user.lastname;
+        state.user.name = `${action.payload.data?.firstname || ''} ${action.payload.data?.lastname || ''}`.trim() || state.user.name;
+        state.user.email = action.payload.data?.email || state.user.email;
+        state.user.phone = action.payload.data?.phone || state.user.phone;
+      }
+    });
+    builder.addCase(updateAuthUser.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload as string;
     });

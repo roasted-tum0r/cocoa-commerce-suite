@@ -39,11 +39,11 @@ export function ImageViewer({ images, initialIndex = 0, isOpen, onClose, authorN
   };
 
   const currentMedia = images[currentIndex];
-  
+
   const isVideo = (url: string, type?: string) => {
-    if (type && type.startsWith("video/")) return true;
-    if (url.includes("/video/upload/")) return true;
-    return url.match(/\.(mp4|webm|ogg|mov)$/i) !== null;
+    if (type && type?.startsWith("video/")) return true;
+    if (url?.includes("/video/upload/")) return true;
+    return url?.match(/\.(mp4|webm|ogg|mov)$/i) !== null;
   };
 
   return (

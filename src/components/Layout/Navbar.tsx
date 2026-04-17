@@ -551,7 +551,7 @@ export const Navbar = ({ onMenuClick }: NavbarProps) => {
                   <DropdownMenuItem asChild>
                     <Link to="/account" className="flex items-center cursor-pointer">
                       <User className="mr-2 h-4 w-4" />
-                      Account Settings
+                      Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>

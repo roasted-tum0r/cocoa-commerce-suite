@@ -125,6 +125,7 @@ export interface AuthState {
     lastname: string;
     createdAt: string;
   } | null;
+  userDetails: any | null;
   loading: boolean;
   error: string | null;
   hashKey: string | null;

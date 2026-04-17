@@ -51,3 +51,29 @@ export const verifyOtp = createAsyncThunk(
     }
   }
 );
+
+// Fetch User Details
+export const fetchUserDetails = createAsyncThunk(
+  "auth/fetchUserDetails",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(API_ENDPOINTS.AUTH.USER_DETAILS);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Update Auth User
+export const updateAuthUser = createAsyncThunk(
+  "auth/updateAuthUser",
+  async ({ id, payload }: { id: string, payload: any }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(API_ENDPOINTS.AUTH.UPDATE_USER(id), payload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);

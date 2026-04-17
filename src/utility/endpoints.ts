@@ -120,6 +120,8 @@ export const API_ENDPOINTS = {
     REGISTER: "auth/register-new-user",
     LOGIN: "auth/login-with-password",
     VERIFY_OTP: "auth/verify-otp",
+    USER_DETAILS: "auth/user-details",
+    UPDATE_USER: (id: string) => `auth/update-user/${id}`,
   },
   NEWSLETTER: {
     SUBSCRIBE: "newsletter-subs",
