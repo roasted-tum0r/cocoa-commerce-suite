@@ -77,3 +77,29 @@ export const updateAuthUser = createAsyncThunk(
     }
   }
 );
+
+// Request Password OTP
+export const requestPasswordOtp = createAsyncThunk(
+  "auth/requestPasswordOtp",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REQUEST_PASSWORD_OTP, {});
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Update Password
+export const updatePassword = createAsyncThunk(
+  "auth/updatePassword",
+  async (payload: any, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(API_ENDPOINTS.AUTH.UPDATE_PASSWORD, payload);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);

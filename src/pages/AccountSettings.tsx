@@ -14,6 +14,7 @@ import { uploadMedia } from "@/redux/thunks/productthunk";
 import { ImageViewer } from "@/components/ui/image-viewer";
 import { ImageCropperModal } from "@/components/ui/image-cropper";
 import { Button } from "@/components/ui/button";
+import { ChangePasswordModal } from "@/components/profile/ChangePasswordModal";
 
 export const AccountSettings = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -26,6 +27,7 @@ export const AccountSettings = () => {
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [imageSrc, setImageSrc] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   useEffect(() => {
     dispatch(fetchUserDetails())
@@ -74,7 +76,6 @@ export const AccountSettings = () => {
       const resultAction = await dispatch(
         uploadMedia({ files: [croppedFile], ownerType: "USER" })
       );
-debugger
       if (uploadMedia.fulfilled.match(resultAction)) {
         const uploadedImages = resultAction.payload;
         if (uploadedImages && uploadedImages.length > 0) {
@@ -323,6 +324,27 @@ debugger
                       )}
                     </CardContent>
                   </Card>
+
+                  {/* Security Settings */}
+                  <Card className="border-border/50 shadow-md rounded-2xl hover:shadow-lg transition-shadow duration-300">
+                    <CardHeader className="pb-4 border-b border-border/50 bg-muted/20">
+                      <CardTitle className="text-xl flex items-center gap-2">
+                        <Shield className="h-5 w-5 text-primary" />
+                        Security Settings
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between p-4 border rounded-xl hover:border-primary/30 transition-colors">
+                        <div>
+                          <h3 className="font-semibold mb-1">Account Password</h3>
+                          <p className="text-sm text-muted-foreground">Change your password to keep your account secure.</p>
+                        </div>
+                        <Button variant="outline" onClick={() => setIsPasswordModalOpen(true)}>
+                          Change Password
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
             ) : (
@@ -349,6 +371,11 @@ debugger
         onClose={() => setIsCropperOpen(false)}
         imageSrc={imageSrc}
         onCropComplete={handleCropComplete}
+      />
+
+      <ChangePasswordModal 
+        isOpen={isPasswordModalOpen} 
+        onClose={() => setIsPasswordModalOpen(false)} 
       />
     </div>
   );

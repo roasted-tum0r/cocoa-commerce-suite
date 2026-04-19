@@ -321,7 +321,6 @@ export const ProductDetail = () => {
       // 3. Refetch reviews list
       dispatch(fetchProductReviews({ id: id!, pagination: { page: 1, limit: 10, sortBy: 'createdAt', isAsc: false } as any }));
     } catch (err) {
-      debugger
       setIsUploadingEditMedia(false);
       toast({ title: "Error", description: "Failed to update review.", variant: "destructive" });
     } finally {

@@ -1,9 +1,32 @@
-export const API_ENDPOINTS = {
-  CATEGORIES: {
-    FIND_ALL: "item-categories/findall",
-  },
+type EndpointFunction = (...args: any[]) => string;
 
-  PRODUCTS: {
+function createGroup<T extends Record<string, string | EndpointFunction>>(prefix: string, endpoints: T): T {
+  const result = {} as any;
+  for (const key in endpoints) {
+    const value = endpoints[key];
+    if (typeof value === "function") {
+      result[key] = (...args: any[]) => {
+        const path = value(...args);
+        if (path.startsWith("/")) return path.slice(1);
+        return path.startsWith("?") ? `${prefix}${path}` : path ? `${prefix}/${path}` : prefix;
+      };
+    } else if (typeof value === "string") {
+      if (value.startsWith("/")) {
+        result[key] = value.slice(1);
+      } else {
+        result[key] = value.startsWith("?") ? `${prefix}${value}` : value ? `${prefix}/${value}` : prefix;
+      }
+    }
+  }
+  return result;
+}
+
+export const API_ENDPOINTS = {
+  CATEGORIES: createGroup("item-categories", {
+    FIND_ALL: "findall",
+  }),
+
+  PRODUCTS: createGroup("items", {
     LIST: (params?: {
       page?: number;
       limit?: number;
@@ -34,16 +57,16 @@ export const API_ENDPOINTS = {
           query.append("maxPrice", params.maxPrice.toFixed(2));
       }
 
-      return `items/list${query.toString() ? `?${query.toString()}` : ""}`;
+      return `list${query.toString() ? `?${query.toString()}` : ""}`;
     },
-    DETAILS: (id: string) => `items/details/${id}`,
+    DETAILS: (id: string) => `details/${id}`,
     SIMILAR: (id: string, params?: { limit?: number; page?: number; sortBy?: string; isAsc?: boolean }) => {
       const query = new URLSearchParams();
       if (params?.limit) query.append("limit", params.limit.toString());
       if (params?.page) query.append("page", params.page.toString());
       if (params?.sortBy) query.append("sortBy", params.sortBy);
       if (params?.isAsc !== undefined) query.append("isAsc", params.isAsc.toString());
-      return `items/details/${id}/similar${query.toString() ? `?${query.toString()}` : ""}`;
+      return `details/${id}/similar${query.toString() ? `?${query.toString()}` : ""}`;
     },
     ALSO_LIKE: (id: string, params?: { limit?: number; page?: number; sortBy?: string; isAsc?: boolean }) => {
       const query = new URLSearchParams();
@@ -51,7 +74,7 @@ export const API_ENDPOINTS = {
       if (params?.page) query.append("page", params.page.toString());
       if (params?.sortBy) query.append("sortBy", params.sortBy);
       if (params?.isAsc !== undefined) query.append("isAsc", params.isAsc.toString());
-      return `items/details/${id}/also-like${query.toString() ? `?${query.toString()}` : ""}`;
+      return `details/${id}/also-like${query.toString() ? `?${query.toString()}` : ""}`;
     },
     ALSO_BOUGHT: (id: string, params?: { limit?: number; page?: number; sortBy?: string; isAsc?: boolean }) => {
       const query = new URLSearchParams();
@@ -59,13 +82,14 @@ export const API_ENDPOINTS = {
       if (params?.page) query.append("page", params.page.toString());
       if (params?.sortBy) query.append("sortBy", params.sortBy);
       if (params?.isAsc !== undefined) query.append("isAsc", params.isAsc.toString());
-      return `items/details/${id}/also-bought${query.toString() ? `?${query.toString()}` : ""}`;
+      return `details/${id}/also-bought${query.toString() ? `?${query.toString()}` : ""}`;
     },
-  },
-  REVIEWS: {
-    CREATE: "reviews",
-    DELETE: (id: string) => `reviews/${id}`,
-    UPDATE: (id: string) => `reviews/${id}`,
+  }),
+
+  REVIEWS: createGroup("reviews", {
+    CREATE: "",
+    DELETE: (id: string) => `${id}`,
+    UPDATE: (id: string) => `${id}`,
     ITEM_REVIEWS: (id: string, params?: { page?: number; limit?: number; sortBy?: string; isAsc?: boolean }) => {
       const query = new URLSearchParams();
 
@@ -76,12 +100,12 @@ export const API_ENDPOINTS = {
         if (params.isAsc !== undefined) query.append("isAsc", String(params.isAsc));
       }
 
-      return `reviews/item/${id}${query.toString() ? `?${query.toString()}` : ""}`;
+      return `item/${id}${query.toString() ? `?${query.toString()}` : ""}`;
     },
-  },
-  CART: {
-    ADD_TO_CART: "cart/add-to-cart",
-    // GET_CART: (userId: string) => `cart?userId=${userId}`,
+  }),
+
+  CART: createGroup("cart", {
+    ADD_TO_CART: "add-to-cart",
     GET_CART: (params?: {
       userId: string;
       isGuestCart?: boolean;
@@ -94,7 +118,7 @@ export const API_ENDPOINTS = {
           query.append("isGuestCart", String(params.isGuestCart));
       }
 
-      return `cart${query.toString() ? `?${query.toString()}` : ""}`;
+      return query.toString() ? `?${query.toString()}` : "";
     },
     CART_INFO: (params?: {
       cartId?: string;
@@ -110,22 +134,27 @@ export const API_ENDPOINTS = {
           query.append("isGuestCart", String(params.isGuestCart));
       }
 
-      return `cart/cart-info${query.toString() ? `?${query.toString()}` : ""}`;
+      return `cart-info${query.toString() ? `?${query.toString()}` : ""}`;
     },
-    DELETE_ITEMS: (cartId: string) => `cart/delete-all?cartId=${cartId}`,
+    DELETE_ITEMS: (cartId: string) => `delete-all?cartId=${cartId}`,
     UPDATE_ITEM_QUANTITY: (params: { itemId: string; userId: string; isGuestCart: boolean }) => 
-      `cart-items/update?itemId=${params.itemId}&userId=${params.userId}&isGuestCart=${params.isGuestCart}`,
-  },
-  AUTH: {
-    REGISTER: "auth/register-new-user",
-    LOGIN: "auth/login-with-password",
-    VERIFY_OTP: "auth/verify-otp",
-    USER_DETAILS: "auth/user-details",
-    UPDATE_USER: (id: string) => `auth/update-user/${id}`,
-  },
-  NEWSLETTER: {
-    SUBSCRIBE: "newsletter-subs",
-    UNSUBSCRIBE: (email: string) => `newsletter-subs/unsubscribe?email=${encodeURIComponent(email)}`,
-  },
+      `/cart-items/update?itemId=${params.itemId}&userId=${params.userId}&isGuestCart=${params.isGuestCart}`,
+  }),
+
+  AUTH: createGroup("auth", {
+    REGISTER: "register-new-user",
+    LOGIN: "login-with-password",
+    VERIFY_OTP: "verify-otp",
+    USER_DETAILS: "user-details",
+    UPDATE_USER: (id: string) => `update-user/${id}`,
+    REQUEST_PASSWORD_OTP: "request-password-otp",
+    UPDATE_PASSWORD: "update-password",
+  }),
+
+  NEWSLETTER: createGroup("newsletter-subs", {
+    SUBSCRIBE: "",
+    UNSUBSCRIBE: (email: string) => `unsubscribe?email=${encodeURIComponent(email)}`,
+  }),
+
   UPLOAD: "upload",
 };
